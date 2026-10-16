@@ -21,6 +21,7 @@ function renderCards(cards){
     d.className="vcard";
     let inner="<h4>"+escapeHtml(c.title||c.type)+"</h4>";
     if(c.type==="media"){ inner+="<ul>"+c.items.map(i=>"<li>▶ "+escapeHtml(i)+"</li>").join("")+"</ul>"; }
+    else if(c.type==="remind"){ inner+="<p>💌 "+escapeHtml((c.detail||{}).message||"Check-in sent")+"</p><p>📞 Call: "+escapeHtml((c.detail||{}).call_scheduled||"")+"</p><p>Status: "+escapeHtml((c.detail||{}).status||"")+"</p>"; }
     else { inner+="<pre>"+escapeHtml(JSON.stringify(c.detail||c.items||c,null,2)).slice(0,600)+"</pre>"; }
     d.innerHTML=inner;
     cardsEl.appendChild(d);

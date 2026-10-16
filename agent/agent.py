@@ -26,6 +26,7 @@ try:
         tool_tv_control,
         tool_door_status,
         tool_order_groceries,
+        tool_remind_grandma,
     )
     MCP_IMPORTED = True
 except Exception:
@@ -35,13 +36,16 @@ except Exception:
         return {"day": day, "events": []}
 
     def tool_tv_control(action="status", app="", title=""):
-        return {"ok": True, "tv": {"app": app or "Fire TV Home", "kids_mode": True}}
+        return {"ok": True, "tv": {"app": app or "TV Home", "kids_mode": True}}
 
     def tool_door_status(camera="front-door"):
         return {"last_event": "No events", "camera": camera}
 
     def tool_order_groceries(items=None, address="home"):
         return {"order_id": "ORD-MOCK", "items": items or [], "status": "confirmed"}
+
+    def tool_remind_grandma(message="", call_time=""):
+        return {"reminder_id": "REM-MOCK", "to": "Grandma", "message": message or "Hi Grandma!", "call_scheduled": call_time or "Tomorrow 10:00", "status": "sent"}
 
 
 def try_bedrock_reply(user_text: str, context: str) -> str:
@@ -81,13 +85,13 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
     # --- Full movie-night orchestration (hero demo flow) ---
     if ("movie" in t and "night" in t) or ("movie night" in t):
         cal = tool_get_calendar("today"); tools_used.append("get_calendar")
-        tv = tool_tv_control("launch", app="Prime Video"); tools_used.append("tv_control:launch Prime Video")
+        tv = tool_tv_control("launch", app="Movies"); tools_used.append("tv_control:launch Movies")
         door = tool_door_status(); tools_used.append("door_status")
         order = tool_order_groceries(["popcorn", "juice"]); tools_used.append("order_groceries")
         kids_note = "Kids mode ON - only U/A content." if profile.get("kids_mode") else ""
         text = (
             "Movie night ready! I checked your calendar - you're free after 7:30pm. "
-            "Fire TV is opening Prime Video. %s Front door: %s. "
+            "Living-room TV is opening movie picks. %s Front door: %s. "
             "Popcorn + juice ordered (%s, arrives ~%s)."
             % (kids_note, door.get("last_event", ""), order.get("order_id", ""), order.get("eta", ""))
         )
@@ -97,7 +101,7 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
             text = ai
         cards = [
             {"type": "media", "title": "Tonight's picks (kid-safe)", "items": ["Bluey Special", "Encanto", "Cricket World Cup Highlights"]},
-            {"type": "tv", "title": "Fire TV", "detail": tv.get("tv", {})},
+            {"type": "tv", "title": "Living-Room TV", "detail": tv.get("tv", {})},
             {"type": "door", "title": "Front door", "detail": door},
             {"type": "order", "title": "Order %s" % order.get("order_id", ""), "detail": order},
         ]
@@ -107,7 +111,7 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
         door = tool_door_status(); tools_used.append("door_status")
         text = "Front door update: %s at %s. No motion right now. Want me to show the snapshot on TV?" % (
             door.get("last_event", "no events"), door.get("time", ""))
-        cards = [{"type": "door", "title": "Ring - Front door", "detail": door}]
+        cards = [{"type": "door", "title": "Front Door", "detail": door}]
         return {"reply": text, "cards": cards, "tools_used": tools_used, "mcp_imported": MCP_IMPORTED}
 
     if any(k in t for k in ["order", "popcorn", "groceries", "buy", "snack"]):
@@ -123,11 +127,28 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
         cards = [{"type": "calendar", "title": "Today", "detail": cal}]
         return {"reply": text, "cards": cards, "tools_used": tools_used, "mcp_imported": MCP_IMPORTED}
 
+    if any(k in t for k in ["grandma", "grandmother", "nani", "dadi", "check in", "elderly", "remind grandma"]):
+        remind = tool_remind_grandma(); tools_used.append("remind_grandma")
+        cal = tool_get_calendar("tomorrow"); tools_used.append("get_calendar")
+        text = (
+            "Done! I sent Grandma a check-in message: \"%s\". "
+            "Video call scheduled for %s. I also pulled tomorrow's calendar so you don't double-book."
+            % (remind.get("message", ""), remind.get("call_scheduled", ""))
+        )
+        ai = try_bedrock_reply(user_text, text)
+        if ai:
+            text = ai
+        cards = [
+            {"type": "remind", "title": "Grandma check-in", "detail": remind},
+            {"type": "calendar", "title": "Tomorrow", "detail": cal},
+        ]
+        return {"reply": text, "cards": cards, "tools_used": tools_used, "mcp_imported": MCP_IMPORTED}
+
     if any(k in t for k in ["tv", "watch", "play", "kids", "prime", "cricket", "movie"]):
         tv = tool_tv_control("status"); tools_used.append("tv_control:status")
-        text = "Fire TV is on (%s). Kids mode is %s. Say 'movie night' and I'll set up everything." % (
+        text = "Living-room TV is on (%s). Kids mode is %s. Say 'movie night' and I'll set up everything." % (
             tv.get("tv", {}).get("app", ""), "ON" if tv.get("tv", {}).get("kids_mode") else "OFF")
-        cards = [{"type": "tv", "title": "Fire TV status", "detail": tv.get("tv", {})}]
+        cards = [{"type": "tv", "title": "TV status", "detail": tv.get("tv", {})}]
         return {"reply": text, "cards": cards, "tools_used": tools_used, "mcp_imported": MCP_IMPORTED}
 
     # Default: helpful + remembers history count (stateful proof)

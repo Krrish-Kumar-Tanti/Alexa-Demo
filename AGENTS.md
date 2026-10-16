@@ -4,11 +4,11 @@
 
 ## 1. What we are building
 
-**Alexa+ Family Captain**: a simulated Alexa+ web experience (Amazon hackathon, Alexa+ track + AWS Builder + Open Source minis).
-One-page UI simulates Alexa+ orchestrating Fire TV + Ring + calendar + grocery orders via a real MCP server + agent.
+**Alexa+ Family Captain**: a simulated Alexa+ web experience (Amazon hackathon: Alexa+ track + AWS Builder + Open Source minis).
+One-page UI simulates Alexa+ orchestrating living-room TV + front-door camera + calendar + grocery orders + Grandma check-ins via a real MCP server + agent.
 Hero command: `"movie night with kids"` → 4 tool calls → 4 visual cards. Demo-friendly, no hardware.
 
-Repo: https://github.com/Krrish-Kumar-Tanti/Alexa-Demo · Local root: `alexa-family-captain/`
+Repo: https://github.com/Krrish-Kumar-Tanti/Alexa-Demo · Local root: repo root (all files visible on GitHub, no subfolder).
 
 ## 2. Hard constraints (DO NOT BREAK)
 
@@ -16,11 +16,12 @@ Repo: https://github.com/Krrish-Kumar-Tanti/Alexa-Demo · Local root: `alexa-fam
    - NO `match` statements, NO `list[dict]`/`dict[str, Any]` annotations (use `typing.List/Dict`), NO `mcp`/`fastmcp`/`strands` SDK imports.
    - `requirements.txt` stays: `fastapi==0.109.2`, `uvicorn==0.27.1`, `pydantic==2.6.1`, `httpx==0.27.0` (test only). `boto3` is OPTIONAL, lazily imported inside `try_bedrock_reply()` only.
 2. **Contracts judges verify — keep stable:**
-   - MCP: `POST /mcp` JSON-RPC 2.0 with methods `initialize` → `protocolVersion "2025-11-25"`, `tools/list` → exactly these 4+ names, `tools/call` → `{content, structuredContent}`. Tool names: `get_calendar`, `tv_control`, `door_status`, `order_groceries` (+ future `remind_grandma` — append, never rename).
+   - MCP: `POST /mcp` JSON-RPC 2.0 with methods `initialize` → `protocolVersion "2025-11-25"`, `tools/list` → these 5 names, `tools/call` → `{content, structuredContent}`. Tool names: `get_calendar`, `tv_control`, `door_status`, `order_groceries`, `remind_grandma` (append new tools, never rename).
    - API: `POST /api/chat` in `{message, history, profile}` → out `{reply, cards, tools_used, mcp_imported}`. `GET /api/health` → `{ok:true}`. `GET /` serves `app/index.html`; `/app/*` static.
    - Agent entry: `agent/agent.py:run_agent(user_text, history, profile)` must always return without raising (mock fallback).
 3. **No build step for UI.** `app/` is vanilla HTML/CSS/JS served by FastAPI. No npm/vite/webpack. Keep it that way until after submission.
 4. **Ports:** MCP `:8001`, API+UI `:8000`. Never change without updating README + run.sh + app.js together.
+5. **Alexa+ only.** No other hackathon tracks in this repo. Device words stay generic: "living-room TV", "front-door camera". Never introduce other-track branding or trademarks (no Prime Video etc.).
 
 ## 3. File ownership (who does what)
 
@@ -29,14 +30,13 @@ Repo: https://github.com/Krrish-Kumar-Tanti/Alexa-Demo · Local root: `alexa-fam
 | `mcp-server/server.py` | MCP tools + JSON-RPC handler | Pure functions `tool_*` importable by agent. State in `STATE` dict. Add tools by appending to `TOOLS` + `dispatch_tool`. |
 | `agent/agent.py` | Brain: router + Bedrock | `run_agent` never raises; `try_bedrock_reply` returns `""` on any failure. `boto3` import ONLY inside that function. |
 | `api/main.py` | Bridge + static server | Thin only: validate `ChatIn`, call `run_agent`, return it. No business logic here. |
-| `app/index.html/.js/.css` | Simulated Alexa+ UI | Dark TV theme. Chips call `send(q)`. Cards render `media/tv/door/order/calendar`. Tool badges from `tools_used`. |
+| `app/index.html/.js/.css` | Simulated Alexa+ UI | Dark TV theme. Chips call `send(q)`. Cards render `media/tv/door/order/calendar/remind`. Tool badges from `tools_used`. |
 | `requirements.txt` | Deps | Pin versions. Don't add unpinned deps. |
 | `README/SUBMISSION.md` | Docs | Update when contracts/ports/tools change. |
 
-## 4. How to run + verify (exact)
+## 4. How to run + verify (exact, from repo root)
 
 ```bash
-cd alexa-family-captain
 pip3 install -r requirements.txt
 python3 -m uvicorn api.main:app --port 8000 &   # UI
 python3 mcp-server/server.py &                  # MCP :8001 (optional for UI, required for MCP proof)
@@ -56,7 +56,7 @@ Full contract test: see README "Test" block. It must print `ALL TESTS PASSED`. R
 
 ## 6. Active roadmap (pick topmost unchecked)
 
-- [ ] `remind_grandma` tool: `mcp-server` (TOOLS + dispatch + `tool_remind_grandma`) → `agent` router branch → door/calendar-style card in `app.js`
+- [x] `remind_grandma` tool: `mcp-server` (TOOLS + dispatch + `tool_remind_grandma`) → `agent` router branch → `remind`-style card in `app.js`
 - [ ] Memory: persist `history` to `agent/memory.json` (load/save in `run_agent`), show "chat N" count in UI
 - [ ] Bedrock diagram + `docs/aws.md` (for AWS Builder feedback answer)
 - [ ] Video script rehearsal (see SUBMISSION.md)

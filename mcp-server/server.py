@@ -34,14 +34,15 @@ STATE = {
         {"id": "evt2", "title": "Family movie night", "start": "20:00", "end": "22:00"},
         {"id": "evt3", "title": "Grandma video call", "start": "Tomorrow 10:00", "end": "10:30"},
     ],
-    "tv": {"power": "on", "app": "Fire TV Home", "kids_mode": True, "volume": 22},
+    "tv": {"power": "on", "app": "TV Home", "kids_mode": True, "volume": 22},
     "door": {
         "last_event": "Package delivered - front door",
         "time": "17:42",
         "motion": False,
-        "snapshot_url": "mock://ring/front-door/latest.jpg",
+        "snapshot_url": "mock://doorbell/front-door/latest.jpg",
     },
     "orders": [],
+    "reminders": [],
 }
 
 
@@ -52,11 +53,11 @@ def tool_get_calendar(day: str = "today") -> Dict[str, Any]:
 
 
 def tool_tv_control(action: str = "status", app: str = "", title: str = "") -> Dict[str, Any]:
-    """Control simulated Fire TV. actions: status, launch, kids_on, kids_off, volume."""
+    """Control living-room TV. actions: status, launch, kids_on, kids_off, volume."""
     tv = STATE["tv"]
     if action == "launch":
-        tv["app"] = app or title or "Prime Video"
-        return {"ok": True, "tv": copy.deepcopy(tv), "message": "Launched %s on Fire TV" % tv["app"]}
+        tv["app"] = app or title or "Movies"
+        return {"ok": True, "tv": copy.deepcopy(tv), "message": "Launched %s on living-room TV" % tv["app"]}
     if action == "kids_on":
         tv["kids_mode"] = True
         return {"ok": True, "tv": copy.deepcopy(tv)}
@@ -69,7 +70,7 @@ def tool_tv_control(action: str = "status", app: str = "", title: str = "") -> D
 
 
 def tool_door_status(camera: str = "front-door") -> Dict[str, Any]:
-    """Return simulated Ring door status."""
+    """Return front-door camera status."""
     d = copy.deepcopy(STATE["door"])
     d["camera"] = camera
     return d
@@ -90,6 +91,24 @@ def tool_order_groceries(items: List[str] = None, address: str = "home") -> Dict
     return copy.deepcopy(order)
 
 
+def tool_remind_grandma(message: str = "", call_time: str = "") -> Dict[str, Any]:
+    """Send a check-in reminder or schedule a call with Grandma."""
+    if not message:
+        message = "Hi Grandma! Just checking in — how are you feeling today?"
+    if not call_time:
+        # Default to the Grandma video call already on calendar, or 30 min from now
+        call_time = "Tomorrow 10:00"
+    reminder = {
+        "reminder_id": "REM-%s" % datetime.now().strftime("%H%M%S"),
+        "to": "Grandma",
+        "message": message,
+        "call_scheduled": call_time,
+        "status": "sent",
+    }
+    STATE["reminders"].append(reminder)
+    return copy.deepcopy(reminder)
+
+
 TOOLS = [
     {
         "name": "get_calendar",
@@ -101,7 +120,7 @@ TOOLS = [
     },
     {
         "name": "tv_control",
-        "description": "Control Fire TV: launch apps, toggle kids mode, check status.",
+        "description": "Control living-room TV: launch apps, toggle kids mode, check status.",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -113,7 +132,7 @@ TOOLS = [
     },
     {
         "name": "door_status",
-        "description": "Get Ring front-door status, last motion/package event.",
+        "description": "Get front-door camera status, last motion/package event.",
         "inputSchema": {
             "type": "object",
             "properties": {"camera": {"type": "string", "default": "front-door"}},
@@ -127,6 +146,17 @@ TOOLS = [
             "properties": {
                 "items": {"type": "array", "items": {"type": "string"}},
                 "address": {"type": "string", "default": "home"},
+            },
+        },
+    },
+    {
+        "name": "remind_grandma",
+        "description": "Send a check-in message or schedule a video call with Grandma (elderly caretaking).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "message": {"type": "string", "description": "Custom message to send to Grandma."},
+                "call_time": {"type": "string", "description": "When to schedule the call (e.g. 'Tomorrow 10:00')."},
             },
         },
     },
@@ -148,6 +178,8 @@ def dispatch_tool(name: str, args: Dict[str, Any]) -> Dict[str, Any]:
         return tool_door_status(camera=args.get("camera", "front-door"))
     if name == "order_groceries":
         return tool_order_groceries(items=args.get("items", ["popcorn"]), address=args.get("address", "home"))
+    if name == "remind_grandma":
+        return tool_remind_grandma(message=args.get("message", ""), call_time=args.get("call_time", ""))
     raise ValueError("unknown tool: %s" % name)
 
 
