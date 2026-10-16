@@ -26,7 +26,7 @@ One project, one track (Alexa+), up to one mini prize — no other tracks in thi
 |---|---|---|
 | 0:00–0:25 | Title + problem: chaotic family evenings | "Family Captain: one Alexa+ command runs movie night — calendar, TV, front door, snacks, Grandma check-in." |
 | 0:25–1:50 | LIVE at `http://127.0.0.1:8000`: speak/type "movie night with kids" → point to tool badges firing → scroll cards → follow-ups "front door?" and "check in on grandma" | Call out kids-mode ON, state across turns, purchasing + caretaking cards. |
-| 1:50–2:25 | Code walk (30s): `mcp-server/server.py` tools/list → `agent/agent.py` Bedrock call → `POST /mcp` in terminal | "Real MCP 2025-11-25 server with 7 tools, real Bedrock integration." |
+| 1:50–2:25 | Code walk (30s): `mcp-server/server.py` tools/list → `agent/agent.py` Bedrock call → `POST /mcp` in terminal | "Real MCP 2025-11-25 server with 7 tools, Bedrock-ready integration (live the moment AWS clears the account, mock brain covers meanwhile)." |
 | 2:25–2:45 | Impact close: elderly check-in + kid safety + what's next | End on repo URL. |
 
 ## 4. Product feedback template (paste into Devpost, fill honestly)

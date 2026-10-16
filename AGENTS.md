@@ -51,15 +51,17 @@ Full contract test: see README "Test" block. It must print `ALL TESTS PASSED`. R
 - Style: small diffs, no refactors without asking. Keep functions < 40 lines. Comments only where logic is non-obvious.
 - Mock data stays family-friendly (Bluey, Encanto, cricket, popcorn, samosa). Kid-safe defaults ON.
 - Secrets: never commit AWS keys or `.env`. AWS via env only (`USE_BEDROCK`, `USE_POLLY`, `AWS_REGION`, `BEDROCK_MODEL_ID`, `POLLY_VOICE`); `boto3` imports stay lazy inside functions.
-- Commits: `feat(mcp|agent|api|ui|docs): short message`. Don't push to `main` without green contract test.
+- Commits: one plain sentence describing the file changes (no `feat:`/`refactor:` prefixes, no labels, no backstory). Don't push without green contract test.
 - If Antigravity and human edit the same file: Antigravity owns `app/*` styling + new cards; human/Opencode owns `mcp-server/` + `agent/` logic. `api/main.py` is shared — coordinate.
 
 ## 6. Active roadmap (pick topmost unchecked)
 
-- [x] `remind_grandma` tool: `mcp-server` (TOOLS + dispatch + `tool_remind_grandma`) → `agent` router branch → `remind`-style card in `app.js`
-- [x] Memory: persist `history` to `agent/memory.json` (load/save in `run_agent`), show "chat N" count in UI
-- [x] Bedrock diagram + `docs/aws.md` (for AWS Builder feedback answer)
-- [ ] Video script rehearsal (see SUBMISSION.md)
+- [x] `remind_grandma` tool + memory persistence + Bedrock diagram (`docs/aws.md`)
+- [x] Voice (Polly `POST /api/speak` + UI playback) + live-brain ready (Nova/Anthropic auto-format, memory context, open-question answers)
+- [x] Confirm gate (`propose_order`/`confirm_order`) + audit ledger (`data/audit.jsonl`, `GET /api/audit`)
+- [ ] Commerce loop: catalog + cart/history/tracking tools + PIN approval (contracts posted in `agents_talking.md` commerce section)
+- [ ] Video recording (script in `SUBMISSION.md` §3 — Krrish only, nobody else can record)
+- [ ] Devpost submission (paste Kiro's copy with 7-tool/Nova corrections, collaborators LAST, submit before Oct 23 12pm PDT)
 
 ## 7. Common pitfalls
 

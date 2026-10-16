@@ -37,3 +37,21 @@
 - **Severity:** Nice-to-have.
 - **Workaround:** Moved all project files to the repo root.
 - **Suggestion:** N/A (our own repo hygiene).
+
+## 5. Bedrock gated on a brand-new account
+
+- **Task:** Get a real AI brain (Bedrock Nova/Claude) for the demo.
+- **Steps:** Created IAM user + keys (worked), enabled the model path — every `InvokeModel` returns "Operation not allowed". Anthropic's in-console use-case form refuses to submit ("account not authorized"); Basic Support can't file technical cases, only service-limit ones, and Bedrock isn't listed there either.
+- **Expected vs actual:** Expected model access after signup; got a multi-layer approval maze instead.
+- **Severity:** Important (blocks the live brain, not the demo — mocks cover everything).
+- **Workaround:** Filed a service-limit case under General; built the brain fallback-first (Nova + Anthropic formats, memory context) so it wakes up with zero code changes when AWS clears us. Polly voice needed no approval and is live.
+- **Suggestion:** Let new accounts invoke at least the cheapest models (Nova Micro) immediately — gating everything pushes student builders away from Bedrock entirely.
+
+## 6. Support-case maze for a simple ask
+
+- **Task:** Ask AWS support to enable Bedrock on a new account.
+- **Steps:** Error message pointed at Support Center → AI screener (no help) → case form → Technical type blocked on Basic plan → Service-limit path → Bedrock missing from service list → Category only offers messaging/SES/General.
+- **Expected vs actual:** Expected one form; got four dead ends before reaching a human.
+- **Severity:** Nice-to-have (worked around, see #5).
+- **Workaround:** Filed under General with a precise description (service + region + account + ask) — humans read the text, the dropdowns are just routing hints.
+- **Suggestion:** Add Bedrock/model-access to the service-limit service list, or say on the error page which plan unlocks technical cases.

@@ -14,7 +14,7 @@ Everything in this repo is one of three things. Learn these and you understand 9
 
 **3. The face — `app/` (a normal web page, no build tools).** Chat box, visual cards, tool-call badges, voice button. It just calls our own API and draws what comes back.
 
-Three helpers worth knowing by name: **memory** (`agent/memory.json` — a notebook that never forgets your chats), the **audit ledger** (`data/audit.jsonl` — a receipt book of every tool call), and the **confirm gate** (the rule that money never moves without your explicit "confirm" — proposals first, orders second).
+Three helpers worth knowing by name: **memory** (`agent/memory.json` — a notebook that never forgets your chats), the **audit ledger** (`data/audit.jsonl` — a receipt book of every tool call), the **confirm gate** (money never moves without your explicit "confirm" — proposals first, orders second), and the **voice box** (Polly Neural reads replies aloud, browser voice as backup).
 
 ## Follow one command through the system
 
