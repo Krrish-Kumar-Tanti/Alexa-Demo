@@ -66,7 +66,7 @@ function renderCards(cards){
           <span class="vcard-icon">📺</span>
           <div>
             <h4>${escapeHtml(c.title || "Living-Room TV")}</h4>
-            <span class="vcard-sub">Fire TV 4K • Living Room</span>
+            <span class="vcard-sub">Living Room • 4K TV</span>
           </div>
           <span class="badge-tag cyan">Active Session</span>
         </div>
