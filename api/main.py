@@ -17,7 +17,7 @@ if os.path.join(_ROOT, "agent") not in sys.path:
 if os.path.join(_ROOT, "mcp-server") not in sys.path:
     sys.path.insert(0, os.path.join(_ROOT, "mcp-server"))
 
-from agent import run_agent  # type: ignore
+from agent import run_agent, load_memory  # type: ignore
 
 app = FastAPI(title="Family Captain API")
 APP_DIR = os.path.join(_ROOT, "app")
@@ -32,6 +32,12 @@ class ChatIn(BaseModel):
 @app.get("/api/health")
 def health():
     return {"ok": True, "service": "family-captain-api"}
+
+
+@app.get("/api/memory")
+def memory():
+    mem = load_memory()
+    return {"total_chats": len(mem), "history": mem}
 
 
 @app.post("/api/chat")

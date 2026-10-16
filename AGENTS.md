@@ -57,8 +57,8 @@ Full contract test: see README "Test" block. It must print `ALL TESTS PASSED`. R
 ## 6. Active roadmap (pick topmost unchecked)
 
 - [x] `remind_grandma` tool: `mcp-server` (TOOLS + dispatch + `tool_remind_grandma`) → `agent` router branch → `remind`-style card in `app.js`
-- [ ] Memory: persist `history` to `agent/memory.json` (load/save in `run_agent`), show "chat N" count in UI
-- [ ] Bedrock diagram + `docs/aws.md` (for AWS Builder feedback answer)
+- [x] Memory: persist `history` to `agent/memory.json` (load/save in `run_agent`), show "chat N" count in UI
+- [x] Bedrock diagram + `docs/aws.md` (for AWS Builder feedback answer)
 - [ ] Video script rehearsal (see SUBMISSION.md)
 
 ## 7. Common pitfalls

@@ -32,6 +32,13 @@ function renderTools(tools){
   toolsEl.innerHTML = tools.map(t=>'<span class="tool">🔧 '+escapeHtml(t)+"</span>").join(" ");
 }
 
+function updateChatCount(n){
+  const badge = document.getElementById("chat-count-badge");
+  const mem = document.getElementById("memory-count");
+  if(badge) badge.textContent = "Chat #" + n;
+  if(mem) mem.textContent = n + (n === 1 ? " chat" : " chats");
+}
+
 async function send(text){
   text = (text||box.value||"").trim();
   if(!text) return;
@@ -45,6 +52,11 @@ async function send(text){
     bubble("alexa", out.reply);
     renderCards(out.cards);
     renderTools(out.tools_used);
+    if(typeof out.chat_count === "number"){
+      updateChatCount(out.chat_count);
+    } else {
+      updateChatCount(history.length + 1);
+    }
     history.push({user:text, alexa:out.reply});
   }catch(e){ bubble("alexa","Backend not running. Start API on :8000. ("+e+")"); }
 }
@@ -60,5 +72,11 @@ document.getElementById("mic").onclick=()=>{
   const rec=new SR(); rec.lang="en-US"; rec.start();
   rec.onresult=e=>{ box.value=e.results[0][0].transcript; send(); };
 };
+
+// Initial load: check persisted memory count
+fetch("/api/memory")
+  .then(r=>r.json())
+  .then(d=>{ if(d && typeof d.total_chats === "number") updateChatCount(d.total_chats); })
+  .catch(()=>{});
 
 bubble("alexa","Hi! I'm Family Captain (simulated Alexa+). Try 'movie night with kids' - I'll check calendar, TV, front door and order snacks in one go.");

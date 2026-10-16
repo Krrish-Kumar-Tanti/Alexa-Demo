@@ -72,6 +72,53 @@ def try_bedrock_reply(user_text: str, context: str) -> str:
         return ""
 
 
+_MEMORY_FILE = os.path.join(_HERE, "memory.json")
+
+
+def load_memory() -> List[Dict[str, Any]]:
+    """Load persisted conversation history from memory.json."""
+    if not os.path.exists(_MEMORY_FILE):
+        return []
+    try:
+        import json
+        with open(_MEMORY_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if isinstance(data, list):
+                return data
+            if isinstance(data, dict):
+                return data.get("history", [])
+    except Exception as e:
+        print("[memory read fallback] %s" % e)
+    return []
+
+
+def save_memory(user_text: str, reply: str) -> int:
+    """Append turn to memory.json and return total count."""
+    try:
+        import json
+        import time
+        mem = load_memory()
+        mem.append({"user": user_text, "reply": reply, "ts": int(time.time())})
+        mem = mem[-100:]
+        with open(_MEMORY_FILE, "w", encoding="utf-8") as f:
+            json.dump({"total_chats": len(mem), "history": mem}, f, indent=2)
+        return len(mem)
+    except Exception as e:
+        print("[memory write fallback] %s" % e)
+        return 1
+
+
+def _finish(user_text: str, reply: str, cards: List[Dict[str, Any]], tools_used: List[str]) -> Dict[str, Any]:
+    chat_count = save_memory(user_text, reply)
+    return {
+        "reply": reply,
+        "cards": cards,
+        "tools_used": tools_used,
+        "mcp_imported": MCP_IMPORTED,
+        "chat_count": chat_count,
+    }
+
+
 def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dict[str, Any] = None) -> Dict[str, Any]:
     """Main entry point used by api/main.py and demo video."""
     if history is None:
@@ -105,27 +152,27 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
             {"type": "door", "title": "Front door", "detail": door},
             {"type": "order", "title": "Order %s" % order.get("order_id", ""), "detail": order},
         ]
-        return {"reply": text, "cards": cards, "tools_used": tools_used, "mcp_imported": MCP_IMPORTED}
+        return _finish(user_text, text, cards, tools_used)
 
     if any(k in t for k in ["door", "ring", "package", "delivery", "who is"]):
         door = tool_door_status(); tools_used.append("door_status")
         text = "Front door update: %s at %s. No motion right now. Want me to show the snapshot on TV?" % (
             door.get("last_event", "no events"), door.get("time", ""))
         cards = [{"type": "door", "title": "Front Door", "detail": door}]
-        return {"reply": text, "cards": cards, "tools_used": tools_used, "mcp_imported": MCP_IMPORTED}
+        return _finish(user_text, text, cards, tools_used)
 
     if any(k in t for k in ["order", "popcorn", "groceries", "buy", "snack"]):
         order = tool_order_groceries(["popcorn", "samosa"]); tools_used.append("order_groceries")
         text = "Done! Ordered popcorn + samosa (%s). Arriving by %s." % (order.get("order_id"), order.get("eta"))
         cards = [{"type": "order", "title": "Order confirmed", "detail": order}]
-        return {"reply": text, "cards": cards, "tools_used": tools_used, "mcp_imported": MCP_IMPORTED}
+        return _finish(user_text, text, cards, tools_used)
 
     if any(k in t for k in ["calendar", "schedule", "meeting", "plan", "free", "homework"]):
         cal = tool_get_calendar(); tools_used.append("get_calendar")
         evts = ", ".join(["%s at %s" % (e["title"], e["start"]) for e in cal.get("events", [])])
         text = "Today: %s. You are free after 7:30pm - perfect for movie night." % evts
         cards = [{"type": "calendar", "title": "Today", "detail": cal}]
-        return {"reply": text, "cards": cards, "tools_used": tools_used, "mcp_imported": MCP_IMPORTED}
+        return _finish(user_text, text, cards, tools_used)
 
     if any(k in t for k in ["grandma", "grandmother", "nani", "dadi", "check in", "elderly", "remind grandma"]):
         remind = tool_remind_grandma(); tools_used.append("remind_grandma")
@@ -142,17 +189,18 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
             {"type": "remind", "title": "Grandma check-in", "detail": remind},
             {"type": "calendar", "title": "Tomorrow", "detail": cal},
         ]
-        return {"reply": text, "cards": cards, "tools_used": tools_used, "mcp_imported": MCP_IMPORTED}
+        return _finish(user_text, text, cards, tools_used)
 
     if any(k in t for k in ["tv", "watch", "play", "kids", "prime", "cricket", "movie"]):
         tv = tool_tv_control("status"); tools_used.append("tv_control:status")
         text = "Living-room TV is on (%s). Kids mode is %s. Say 'movie night' and I'll set up everything." % (
             tv.get("tv", {}).get("app", ""), "ON" if tv.get("tv", {}).get("kids_mode") else "OFF")
         cards = [{"type": "tv", "title": "TV status", "detail": tv.get("tv", {})}]
-        return {"reply": text, "cards": cards, "tools_used": tools_used, "mcp_imported": MCP_IMPORTED}
+        return _finish(user_text, text, cards, tools_used)
 
     # Default: helpful + remembers history count (stateful proof)
-    n = len(history)
+    past_memory = load_memory()
+    n = max(len(history), len(past_memory))
     text = (
         "I'm your Family Captain. I can do movie night setup, front-door check, calendar, or orders - "
         "all in one go. (We've chatted %d times, I remember context.) Try: 'movie night with kids'." % n
@@ -160,4 +208,4 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
     ai = try_bedrock_reply(user_text, text)
     if ai:
         text = ai
-    return {"reply": text, "cards": [], "tools_used": tools_used, "mcp_imported": MCP_IMPORTED}
+    return _finish(user_text, text, [], tools_used)
