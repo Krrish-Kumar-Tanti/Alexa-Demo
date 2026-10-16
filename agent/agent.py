@@ -252,10 +252,11 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
         cards = [{"type": "order_proposal", "title": "Confirm your order", "detail": prop}]
         return _finish(user_text, text, cards, tools_used)
 
-    if any(k in t for k in ["calendar", "schedule", "meeting", "plan", "free", "homework"]):
-        cal = tool_get_calendar(); tools_used.append("get_calendar")
+    if any(k in t for k in ["calendar", "schedule", "meeting", "plan", "free", "homework", "tomorrow", "today", "tonight"]):
+        day = "tomorrow" if "tomorrow" in t else "today"
+        cal = tool_get_calendar(day); tools_used.append("get_calendar")
         evts = ", ".join(["%s at %s" % (e["title"], e["start"]) for e in cal.get("events", [])])
-        text = "Today: %s. You are free after 7:30pm - perfect for movie night." % evts
+        text = "%s: %s. You are free after 7:30pm - perfect for movie night." % (day.capitalize(), evts)
         cards = [{"type": "calendar", "title": "Today", "detail": cal}]
         return _finish(user_text, text, cards, tools_used)
 
