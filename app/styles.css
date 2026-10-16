@@ -308,6 +308,7 @@ body{
 .badge-tag.cyan{background:rgba(0,212,255,0.15);color:var(--cyan);border:1px solid rgba(0,212,255,0.3)}
 .badge-tag.purple{background:rgba(168,85,247,0.15);color:var(--purple);border:1px solid rgba(168,85,247,0.3)}
 .badge-tag.pink{background:rgba(244,114,182,0.15);color:#f472b6;border:1px solid rgba(244,114,182,0.3)}
+.badge-tag.amber{background:rgba(251,191,36,0.15);color:var(--amber);border:1px solid rgba(251,191,36,0.3)}
 .badge-tag.red-pulse{
   background:rgba(255,95,87,0.15);color:var(--red);border:1px solid rgba(255,95,87,0.3);
   animation:pulse-red 1.5s infinite;
@@ -448,6 +449,54 @@ body{
   0%{transform:scale(1);box-shadow:0 0 16px #34d399}
   100%{transform:scale(1.25);box-shadow:0 0 32px #34d399,0 0 64px rgba(52,211,153,0.5)}
 }
+
+/* ── Order Proposal (Confirmation Gate) ── */
+.proposal-card-body{
+  background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.25);
+  border-radius:10px;padding:12px;
+}
+.proposal-items p{font-size:12px;color:var(--text-primary);margin:4px 0}
+.proposal-note{
+  display:block;font-size:10px;color:var(--amber);margin:8px 0;font-style:italic;
+}
+.proposal-actions{
+  display:flex;gap:8px;margin-top:10px;
+}
+.btn-confirm{
+  flex:1;background:linear-gradient(135deg,var(--green),#059669);
+  color:#000;border:none;border-radius:8px;padding:8px 12px;
+  font-size:12px;font-weight:700;cursor:pointer;transition:var(--transition);
+}
+.btn-confirm:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(52,211,153,0.3)}
+.btn-decline{
+  background:rgba(255,95,87,0.15);color:var(--red);
+  border:1px solid rgba(255,95,87,0.3);border-radius:8px;padding:8px 12px;
+  font-size:12px;font-weight:600;cursor:pointer;transition:var(--transition);
+}
+.btn-decline:hover{background:rgba(255,95,87,0.25)}
+
+/* ── Execution Audit Ledger Panel ── */
+#audit-ledger{
+  max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;
+  margin-bottom:8px;
+}
+#audit-ledger::-webkit-scrollbar{width:4px}
+#audit-ledger::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.audit-row{
+  display:flex;justify-content:space-between;align-items:center;
+  background:rgba(0,0,0,0.25);border:1px solid rgba(43,74,133,0.3);
+  padding:6px 10px;border-radius:6px;font-size:11px;
+}
+.audit-row.ok{border-left:3px solid var(--green)}
+.audit-row.err{border-left:3px solid var(--red)}
+.audit-main{display:flex;align-items:center;gap:8px}
+.audit-tool{font-family:'SF Mono','Fira Code',monospace;font-weight:600;color:var(--cyan)}
+.audit-status{
+  font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;
+}
+.audit-status.ok{background:rgba(52,211,153,0.15);color:var(--green)}
+.audit-status.err{background:rgba(255,95,87,0.15);color:var(--red)}
+.audit-time{color:var(--text-muted);font-size:10px}
 
 /* ── Tool badges ── */
 .tool{

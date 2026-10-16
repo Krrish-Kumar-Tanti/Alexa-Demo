@@ -23,7 +23,7 @@ import os
 import time
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 from pydantic import BaseModel
 
 MCP_PROTOCOL_VERSION = "2025-11-25"
@@ -299,7 +299,12 @@ async def mcp_handler(request: Request):
     msgs = body if is_batch else [body]
     replies = []
     for msg in msgs:
-        replies.append(handle_rpc(msg))
+        # Stateless server: no Mcp-Session-Id tracking needed; every POST stands alone.
+        r = handle_rpc(msg)
+        if r is not None:
+            replies.append(r)
+    if not replies:
+        return Response(status_code=202)
     if is_batch:
         return JSONResponse(replies)
     return JSONResponse(replies[0])
@@ -310,9 +315,9 @@ def handle_rpc(msg: Dict[str, Any]) -> Dict[str, Any]:
     msg_id = msg.get("id")
     params = msg.get("params", {}) or {}
 
-    # Notifications have no id -> no reply
+    # Notifications (e.g. notifications/initialized) carry no id and get no reply.
     if msg_id is None:
-        return {"jsonrpc": "2.0", "result": None}
+        return None
 
     try:
         if method == "initialize":

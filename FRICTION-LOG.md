@@ -22,7 +22,7 @@
 
 ## 3. No Alexa hardware or device lab access
 
-- **Task:** Build an Alexa+ track entry with no Echo, no Fire TV, no Bee device.
+- **Task:** Build an Alexa+ track entry with no Echo hardware or device lab access.
 - **Steps:** Read the track rules; found the simulated-experience path explicitly allows a web-app simulation with any agentic tool.
 - **Expected vs actual:** Expected a hardware blocker; the rules provided a first-class no-hardware path.
 - **Severity:** Nice-to-have (resolved by docs).

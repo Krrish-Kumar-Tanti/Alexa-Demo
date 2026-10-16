@@ -91,7 +91,7 @@ function renderCards(cards){
           <span class="vcard-icon">🔔</span>
           <div>
             <h4>${escapeHtml(c.title || "Front Door Camera")}</h4>
-            <span class="vcard-sub">Ring Doorbell Pro • Entryway</span>
+            <span class="vcard-sub">Front Door • Entryway</span>
           </div>
           <span class="badge-tag red-pulse">● LIVE 1080p</span>
         </div>
@@ -117,7 +117,7 @@ function renderCards(cards){
         <div class="vcard-header">
           <span class="vcard-icon">🍿</span>
           <div>
-            <h4>${escapeHtml(c.title || "Amazon Fresh Order")}</h4>
+            <h4>${escapeHtml(c.title || "Grocery Order")}</h4>
             <span class="vcard-sub">ID: ${escapeHtml(ord.order_id || "ORD-LIVE")}</span>
           </div>
           <span class="badge-tag green">Confirmed</span>
@@ -193,6 +193,30 @@ function renderCards(cards){
           </div>
         </div>
       `;
+    } else if(c.type==="order_proposal"){
+      const prop = c.detail || {};
+      const items = prop.items || [];
+      inner += `
+        <div class="vcard-header">
+          <span class="vcard-icon">🛡️</span>
+          <div>
+            <h4>${escapeHtml(c.title || "Confirm Your Order")}</h4>
+            <span class="vcard-sub">Proposal: ${escapeHtml(prop.proposal_id || "PROP")}</span>
+          </div>
+          <span class="badge-tag amber">Human Approval</span>
+        </div>
+        <div class="proposal-card-body">
+          <div class="proposal-items">
+            <p>Staged items: <b>${items.map(i=>escapeHtml(i)).join(", ")}</b></p>
+            <p>Destination: <b>${escapeHtml(prop.address || "Home")}</b></p>
+            <small class="proposal-note">Alexa+ Guardrail: Real-world actions require explicit confirmation.</small>
+          </div>
+          <div class="proposal-actions">
+            <button class="btn-confirm" onclick="send('confirm')">✓ Confirm & Place Order</button>
+            <button class="btn-decline" onclick="send('cancel')">✕ Decline / Cancel</button>
+          </div>
+        </div>
+      `;
     } else {
       inner += `
         <h4>${escapeHtml(c.title||c.type)}</h4>
@@ -208,6 +232,32 @@ function renderCards(cards){
 function renderTools(tools){
   if(!tools || !tools.length){ toolsEl.innerHTML='<p class="muted">No tools called (chit-chat).</p>'; return; }
   toolsEl.innerHTML = tools.map(t=>'<span class="tool">🔧 '+escapeHtml(t)+"</span>").join(" ");
+}
+
+async function fetchAuditLedger(){
+  const el = document.getElementById("audit-ledger");
+  if(!el) return;
+  try{
+    const r = await fetch("/api/audit");
+    const d = await r.json();
+    const entries = d.entries || [];
+    if(!entries.length){
+      el.innerHTML = '<p class="muted">No tool executions recorded yet.</p>';
+      return;
+    }
+    el.innerHTML = entries.slice(0, 5).map(e=>{
+      const t = new Date(e.ts * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+      return `
+        <div class="audit-row ${e.ok ? 'ok' : 'err'}">
+          <div class="audit-main">
+            <span class="audit-tool">⚡ ${escapeHtml(e.tool)}</span>
+            <span class="audit-status ${e.ok ? 'ok' : 'err'}">${e.ok ? 'PASS' : 'FAIL'}</span>
+          </div>
+          <span class="audit-time">${t}</span>
+        </div>
+      `;
+    }).join("");
+  }catch(e){}
 }
 
 function updateChatCount(n){
@@ -231,6 +281,7 @@ async function send(text){
     renderCards(out.cards);
     renderTools(out.tools_used);
     speak(out.reply);
+    fetchAuditLedger();
     if(typeof out.chat_count === "number"){
       updateChatCount(out.chat_count);
     } else {
@@ -264,10 +315,12 @@ if(ttsBtn){
   };
 }
 
-// Initial load: check persisted memory count
+// Initial load: check persisted memory count & audit ledger
 fetch("/api/memory")
   .then(r=>r.json())
   .then(d=>{ if(d && typeof d.total_chats === "number") updateChatCount(d.total_chats); })
   .catch(()=>{});
+
+fetchAuditLedger();
 
 bubble("alexa","Hi! I'm Family Captain (simulated Alexa+). Try 'movie night with kids' - I'll check calendar, TV, front door and order snacks in one go.");
