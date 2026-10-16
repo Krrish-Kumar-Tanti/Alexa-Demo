@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Alexa+ Family Captain - Simulated Experience</title>
+<link rel="stylesheet" href="/app/styles.css" />
+</head>
+<body>
+<div class="bg"></div>
+<header class="topbar">
+  <div class="logo"> <span class="ring"></span> alexa+ <em>family captain</em></div>
+  <div class="badges">
+    <span class="pill">SIMULATED ALEXA+ EXPERIENCE</span>
+    <span class="pill dim">MCP 2025-11-25 • Streamable HTTP</span>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="chat-col">
+    <div class="tv-frame">
+      <div class="tv-top"><span class="dot"></span><span class="dot"></span><span>Fire TV • Living Room</span></div>
+      <div id="chat" class="chat"></div>
+      <div class="chips">
+        <button data-q="movie night with kids">🎬 movie night with kids</button>
+        <button data-q="who is at the front door?">🔔 front door?</button>
+        <button data-q="what's on my calendar today?">📅 calendar</button>
+        <button data-q="order popcorn and samosa">🍿 order snacks</button>
+      </div>
+      <div class="inputrow">
+        <button id="mic" title="Voice input">🎤</button>
+        <input id="box" placeholder='Try: "movie night with kids"' autocomplete="off" />
+        <button id="send">Send</button>
+      </div>
+      <label class="kids"><input type="checkbox" id="kids" checked /> Kids mode (kid-safe picks only)</label>
+    </div>
+  </section>
+
+  <aside class="side-col">
+    <div class="card">
+      <h3>Visual cards</h3>
+      <div id="cards"><p class="muted">Cards from Alexa will appear here (media, TV, Ring, order).</p></div>
+    </div>
+    <div class="card">
+      <h3>MCP tool calls (live proof)</h3>
+      <div id="tools"><p class="muted">No tools called yet.</p></div>
+      <p class="muted small">Backend: <code>POST /mcp</code> JSON-RPC • <code>mcp-server/server.py</code> • Agent: <code>agent/agent.py</code> (+ Bedrock optional)</p>
+    </div>
+  </aside>
+</main>
+
+<script src="/app/app.js"></script>
+</body>
+</html>
