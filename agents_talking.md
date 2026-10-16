@@ -710,5 +710,37 @@ Update for **OpenCode and Boss Krrish** 🛠️:
 - `api/main.py` + `app/app.js`: `POST /api/speak` (Polly Neural → base64 MP3, `{fallback:true}` on any failure) with UI trying Polly first, browser voice second.
 - Kiro K2 correction: Devpost copy names Claude Sonnet — code now speaks **Nova Micro** format (auto-detects Anthropic format if `BEDROCK_MODEL_ID` ever switches to Claude). Live status 2026-10-17: **Polly voice is LIVE**; Bedrock InvokeModel returns "Operation not allowed" on this free-plan account (verification/support case pending) so the brain stays on mock + memory answers until AWS clears it — zero code changes needed when it does.
 
+---
+
+## 🛒 Commerce loop — full Amazon-style ordering (simulated, UCP-mirrored)
+
+> Boss-approved direction: nobody can place REAL Amazon retail orders from a hackathon build (no third-party retail-order API exists; real Alexa+ checkout needs merchant onboarding + certification). So we simulate the complete loop with total fidelity and mirror official UCP checkout language in Devpost feedback.
+
+### Card JSON contracts (Antigravity: build against these NOW, backend lands same shapes)
+
+- Products: `{"type":"products","title":"Top picks for 'coffee'","detail":{"items":[{"id","name","price","rating"}]}}`
+- Cart: `{"type":"cart","title":"Your cart","detail":{"items":[{"id","name","qty","price"}],"total":0}}`
+- Proposal (exists): `{"type":"order_proposal","title":"Confirm your order","detail":{"proposal_id","items","address","status"}}`
+- Tracking: `{"type":"tracking","title":"Order ORD-x","detail":{"order":{...},"stage":"Packing"}}`
+- History: `{"type":"history","title":"Past orders","detail":{"orders":[...]}}`
+- PIN beat: user typing any 4 digits while a proposal is pending = voice-PIN approval → executes.
+
+### 🟩 OpenCode — backend. In this order:
+
+- [ ] **Task O5 — catalog + cart tools.** `data/catalog.json` (~12 family items: id/name/price/rating). New MCP tools: `search_products`, `add_to_cart`, `get_cart` (STATE cart). Tool count 7 → 12. Post "catalog ready" here.
+- [ ] **Task O6 — agent commerce flow.** `reorder` ("order my usual" = history → propose), 4-digit PIN approves pending proposal, "track my order" → `track_order` (stage from elapsed minutes), "order history" → `order_history` card. `propose_order` builds from cart when items empty. Post "commerce flow ready" here.
+- [ ] **Task O7 — docs + test.** README/AGENTS tool counts 12, contract test updated, full suite green, commit + push.
+
+### 🟦 Antigravity — UI (`app/*` only). In this order, against contracts above:
+
+- [ ] **Task C1 — product cards.** Price, rating, Add button (sends `add <name>`), works off `products` cards.
+- [ ] **Task C2 — cart panel.** Items, quantities, total, checkout button, works off `cart` cards.
+- [ ] **Task C3 — checkout sheet.** Mock wallet picker ("Visa ending 4321") + PIN pad sending 4 digits; Confirm/Decline stay as backup.
+- [ ] **Task C4 — tracking + history.** Timeline (Ordered → Packing → On the way) off `tracking` cards; list off `history` cards.
+
+### 🟨 Kiro — copy. One task:
+
+- [ ] **Task K4 — commerce copy refresh.** Devpost description + feedback: tool count 7 → 12, add the "order my usual → PIN → tracking" demo beat, UCP-mirroring language (sessions, voice-PIN authorization, wallet picker), keep everything else. Flag that the video script may swap one follow-up for the reorder beat (needs Krrish's call).
+
 
 
