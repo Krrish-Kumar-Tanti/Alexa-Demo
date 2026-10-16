@@ -20,6 +20,23 @@ _MCP_DIR = os.path.join(os.path.dirname(_HERE), "mcp-server")
 if _MCP_DIR not in sys.path:
     sys.path.insert(0, _MCP_DIR)
 
+
+def _load_dotenv() -> None:
+    """Load repo-root .env into environ (never overrides real env). No new deps."""
+    try:
+        path = os.path.join(os.path.dirname(_HERE), ".env")
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    os.environ.setdefault(k.strip(), v.strip())
+    except Exception:
+        pass
+
+
+_load_dotenv()
+
 try:
     from server import (  # type: ignore
         tool_get_calendar,
@@ -60,27 +77,57 @@ except Exception:
 _PENDING_PROPOSAL = None  # staged order awaiting user approval (same-process API only)
 
 
+def _invoke_nova(client: Any, model: str, prompt: str) -> str:
+    import json
+    body = json.dumps({"messages": [{"role": "user", "content": [{"text": prompt}]}],
+                       "inferenceConfig": {"max_new_tokens": 300}})
+    resp = client.invoke_model(modelId=model, body=body)
+    data = json.loads(resp["body"].read())
+    return data.get("output", {}).get("message", {}).get("content", [{}])[0].get("text", "")
+
+
+def _invoke_anthropic(client: Any, model: str, prompt: str) -> str:
+    import json
+    body = json.dumps({"anthropic_version": "bedrock-2023-05-31", "max_tokens": 300,
+                       "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}]})
+    resp = client.invoke_model(modelId=model, body=body)
+    data = json.loads(resp["body"].read())
+    return data.get("content", [{}])[0].get("text", "")
+
+
 def try_bedrock_reply(user_text: str, context: str) -> str:
     """
-    Try real AWS Bedrock Claude call. Returns text or empty string on failure.
+    Try real AWS Bedrock call (Nova or Anthropic, picked by BEDROCK_MODEL_ID).
+    Returns text or empty string on any failure (mock brain takes over).
     AWS Builder mini-challenge proof: uses boto3 bedrock-runtime.
-    Requires env: AWS_REGION + AWS creds + Bedrock model access.
+    Requires env: USE_BEDROCK=1 + AWS creds + model access.
     """
     if os.getenv("USE_BEDROCK", "0") != "1":
         return ""
     try:
         import boto3  # type: ignore
         region = os.getenv("AWS_REGION", "us-east-1")
-        model = os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-3-sonnet-20240229-v1:0")
+        model = os.getenv("BEDROCK_MODEL_ID", "amazon.nova-micro-v1:0")
         client = boto3.client("bedrock-runtime", region_name=region)
         prompt = "You are Alexa+ Family Captain. Context:\n%s\nUser: %s\nReply in 2 friendly sentences." % (
             context, user_text)
-        body = '{"anthropic_version":"bedrock-2023-05-31","max_tokens":300,"messages":[{"role":"user","content":[{"type":"text","text":%s}]}]}' % __import__("json").dumps(prompt)
-        resp = client.invoke_model(modelId=model, body=body)
-        data = __import__("json").loads(resp["body"].read())
-        return data.get("content", [{}])[0].get("text", "")
+        if "nova" in model.lower():
+            return _invoke_nova(client, model, prompt)
+        return _invoke_anthropic(client, model, prompt)
     except Exception as e:
         print("[bedrock fallback] %s" % e)
+        return ""
+
+
+def memory_context(max_turns: int = 6) -> str:
+    """Recent conversation as model context. Empty string when no history."""
+    try:
+        mem = load_memory()[-max_turns:]
+        if not mem:
+            return ""
+        lines = ["User: %s / Alexa: %s" % (m.get("user", ""), m.get("reply", "")) for m in mem]
+        return "Conversation so far:\n" + "\n".join(lines)
+    except Exception:
         return ""
 
 
@@ -178,8 +225,8 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
             "Popcorn + juice ordered (%s, arrives ~%s)."
             % (kids_note, door.get("last_event", ""), order.get("order_id", ""), order.get("eta", ""))
         )
-        # Try to upgrade wording with Bedrock if enabled
-        ai = try_bedrock_reply(user_text, text)
+        # Try to upgrade wording with Bedrock if enabled (with memory context)
+        ai = try_bedrock_reply(user_text, (memory_context() + "\n" + text).strip())
         if ai:
             text = ai
         cards = [
@@ -220,7 +267,7 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
             "Video call scheduled for %s. I also pulled tomorrow's calendar so you don't double-book."
             % (remind.get("message", ""), remind.get("call_scheduled", ""))
         )
-        ai = try_bedrock_reply(user_text, text)
+        ai = try_bedrock_reply(user_text, (memory_context() + "\n" + text).strip())
         if ai:
             text = ai
         cards = [
@@ -236,6 +283,28 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
         cards = [{"type": "tv", "title": "TV status", "detail": tv.get("tv", {})}]
         return _finish(user_text, text, cards, tools_used)
 
+    if any(k in t for k in ["who am i", "my name", "do you know me", "who are you"]):
+        name = str(profile.get("name", "Family"))
+        if "who are you" in t and "who am i" not in t:
+            text = ("I'm Family Captain, your Alexa+ helper. I run movie nights, front-door checks, "
+                    "calendar lookups, snack orders and Grandma check-ins — just ask.")
+        else:
+            past = load_memory()
+            if past:
+                last = past[-1].get("user", "something")
+                text = ("You're %s — we've chatted %d times, most recently about '%s'. "
+                        "I keep our history so you never repeat yourself." % (name, len(past), last))
+            else:
+                text = ("You're %s! We haven't chatted yet — try 'movie night with kids' and I'll remember "
+                        "everything from there." % name)
+        return _finish(user_text, text, [], tools_used)
+
+    if any(k in t for k in ["what can you", "help", "what do you do", "abilities", "commands"]):
+        text = ("I can: set up movie night, check the front door, read your calendar, order snacks "
+                "(I always ask before ordering), and check in on Grandma. I remember our chats. "
+                "Try 'movie night with kids'.")
+        return _finish(user_text, text, [], tools_used)
+
     # Default: helpful + remembers history count (stateful proof)
     past_memory = load_memory()
     n = max(len(history), len(past_memory))
@@ -243,7 +312,7 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
         "I'm your Family Captain. I can do movie night setup, front-door check, calendar, or orders - "
         "all in one go. (We've chatted %d times, I remember context.) Try: 'movie night with kids'." % n
     )
-    ai = try_bedrock_reply(user_text, text)
+    ai = try_bedrock_reply(user_text, (memory_context() + "\n" + text).strip())
     if ai:
         text = ai
     return _finish(user_text, text, [], tools_used)

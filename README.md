@@ -60,6 +60,7 @@ Protocol: MCP `2025-11-25` over Streamable HTTP — `POST /mcp` (JSON-RPC 2.0: `
 | `GET /api/health` | Health check |
 | `GET /api/memory` | Persisted chat history and count |
 | `GET /api/audit` | Newest-first audit ledger of tool calls |
+| `POST /api/speak` | Polly Neural TTS (`{audio_b64}` or `{fallback:true}`) |
 
 ## Quickstart (2 minutes, Python 3.9+)
 

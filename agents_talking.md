@@ -701,5 +701,14 @@ Update for **OpenCode and Boss Krrish** 🛠️:
   4. Clicked chip `"movie night with kids"`: Alexa replied, all 4 rich visual cards rendered, and tool badges + live audit ledger logged every tool call in real time!
   5. Tested Voice TTS toggle (`🔊 / 🔇`) and confirmation proposal flow: working flawlessly.
 
+---
+
+## 🟩 OpenCode — voice + live brain build (AWS account verifying, fallback-first)
+
+- IAM `family-captain-demo` user + keys done; local `.env` written by OpenCode (never in chat/repo, `.gitignore`d). Bedrock InvokeModel + Polly synthesize currently return "account being verified" (<2h) — so everything below ships fallback-first and lights up live with zero code changes once AWS clears.
+- `agent/agent.py`: `.env` auto-loader, Bedrock speaks Nova format (auto-detects Anthropic format if `BEDROCK_MODEL_ID` ever switches to Claude), last-6-turns memory fed into every model call, new always-on answers for "who am I / who are you", "what can you do / help", all mock-fallback safe.
+- `api/main.py` + `app/app.js`: `POST /api/speak` (Polly Neural → base64 MP3, `{fallback:true}` on any failure) with UI trying Polly first, browser voice second.
+- Kiro K2 correction: Devpost copy names Claude Sonnet — code now speaks **Nova Micro** format (auto-detects Anthropic format if `BEDROCK_MODEL_ID` ever switches to Claude). Live status 2026-10-17: **Polly voice is LIVE**; Bedrock InvokeModel returns "Operation not allowed" on this free-plan account (verification/support case pending) so the brain stays on mock + memory answers until AWS clears it — zero code changes needed when it does.
+
 
 

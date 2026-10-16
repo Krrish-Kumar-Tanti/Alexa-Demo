@@ -267,6 +267,25 @@ function updateChatCount(n){
   if(mem) mem.textContent = n + (n === 1 ? " chat" : " chats");
 }
 
+async function speakViaPolly(text){
+  try{
+    const r = await fetch("/api/speak",{method:"POST",headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({text})});
+    if(!r.ok) return false;
+    const d = await r.json();
+    if(!d.audio_b64) return false;
+    const ring = document.querySelector(".ring");
+    await new Promise((res, rej)=>{
+      const a = new Audio("data:audio/mpeg;base64,"+d.audio_b64);
+      if(ring) ring.classList.add("speaking");
+      a.onended = ()=>{ if(ring) ring.classList.remove("speaking"); res(); };
+      a.onerror = ()=>{ if(ring) ring.classList.remove("speaking"); rej(new Error("audio")); };
+      a.play().catch(rej);
+    });
+    return true;
+  }catch(e){ return false; }
+}
+
 async function send(text){
   text = (text||box.value||"").trim();
   if(!text) return;
@@ -280,7 +299,7 @@ async function send(text){
     bubble("alexa", out.reply);
     renderCards(out.cards);
     renderTools(out.tools_used);
-    speak(out.reply);
+    if(!(await speakViaPolly(out.reply))) speak(out.reply);
     fetchAuditLedger();
     if(typeof out.chat_count === "number"){
       updateChatCount(out.chat_count);

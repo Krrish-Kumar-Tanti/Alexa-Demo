@@ -2,6 +2,7 @@
 Family Captain API bridge - serves simulated Alexa+ web UI + /api/chat.
 Run: uvicorn main:app --port 8000  (from api/ folder)
 """
+import base64
 import os
 import sys
 from typing import Any, Dict, List
@@ -44,6 +45,31 @@ def memory():
 @app.get("/api/audit")
 def audit(limit: int = 20):
     return {"entries": read_audit(limit)}
+
+
+class SpeakIn(BaseModel):
+    text: str = ""
+    voice: str = ""
+
+
+@app.post("/api/speak")
+def speak(body: SpeakIn):
+    """Polly Neural TTS. Returns {audio_b64} or {fallback:true} — UI degrades to browser voice."""
+    if os.getenv("USE_POLLY", "0") != "1" or not body.text.strip():
+        return {"fallback": True}
+    try:
+        import boto3  # type: ignore
+        client = boto3.client("polly", region_name=os.getenv("AWS_REGION", "us-east-1"))
+        resp = client.synthesize_speech(
+            Text=body.text.strip()[:3000],
+            OutputFormat="mp3",
+            VoiceId=body.voice or os.getenv("POLLY_VOICE", "Joanna"),
+            Engine="neural",
+        )
+        return {"audio_b64": base64.b64encode(resp["AudioStream"].read()).decode("ascii")}
+    except Exception as e:
+        print("[polly fallback] %s" % e)
+        return {"fallback": True}
 
 
 @app.post("/api/chat")

@@ -17,7 +17,7 @@ Repo: https://github.com/Krrish-Kumar-Tanti/Alexa-Demo · Local root: repo root 
    - `requirements.txt` stays: `fastapi==0.109.2`, `uvicorn==0.27.1`, `pydantic==2.6.1`, `httpx==0.27.0` (test only). `boto3` is OPTIONAL, lazily imported inside `try_bedrock_reply()` only.
 2. **Contracts judges verify — keep stable:**
    - MCP: `POST /mcp` JSON-RPC 2.0 with methods `initialize` → `protocolVersion "2025-11-25"`, `tools/list` → these 7 names, `tools/call` → `{content, structuredContent}`. Tool names: `get_calendar`, `tv_control`, `door_status`, `order_groceries`, `remind_grandma`, `propose_order`, `confirm_order` (append new tools, never rename).
-   - API: `POST /api/chat` in `{message, history, profile}` → out `{reply, cards, tools_used, mcp_imported}`. `GET /api/health` → `{ok:true}`. `GET /` serves `app/index.html`; `/app/*` static.
+   - API: `POST /api/chat` in `{message, history, profile}` → out `{reply, cards, tools_used, mcp_imported}`. `GET /api/health` → `{ok:true}`. `POST /api/speak` in `{text}` → `{audio_b64}` or `{fallback:true}`. `GET /` serves `app/index.html`; `/app/*` static.
    - Agent entry: `agent/agent.py:run_agent(user_text, history, profile)` must always return without raising (mock fallback).
 3. **No build step for UI.** `app/` is vanilla HTML/CSS/JS served by FastAPI. No npm/vite/webpack. Keep it that way until after submission.
 4. **Ports:** MCP `:8001`, API+UI `:8000`. Never change without updating README + run.sh + app.js together.
@@ -50,7 +50,7 @@ Full contract test: see README "Test" block. It must print `ALL TESTS PASSED`. R
 
 - Style: small diffs, no refactors without asking. Keep functions < 40 lines. Comments only where logic is non-obvious.
 - Mock data stays family-friendly (Bluey, Encanto, cricket, popcorn, samosa). Kid-safe defaults ON.
-- Secrets: never commit AWS keys. Bedrock via env only (`USE_BEDROCK`, `AWS_REGION`, `BEDROCK_MODEL_ID`).
+- Secrets: never commit AWS keys or `.env`. AWS via env only (`USE_BEDROCK`, `USE_POLLY`, `AWS_REGION`, `BEDROCK_MODEL_ID`, `POLLY_VOICE`); `boto3` imports stay lazy inside functions.
 - Commits: `feat(mcp|agent|api|ui|docs): short message`. Don't push to `main` without green contract test.
 - If Antigravity and human edit the same file: Antigravity owns `app/*` styling + new cards; human/Opencode owns `mcp-server/` + `agent/` logic. `api/main.py` is shared — coordinate.
 

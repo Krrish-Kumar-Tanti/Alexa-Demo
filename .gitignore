@@ -8,3 +8,4 @@ __pycache__/
 venv/
 agent/memory.json
 data/
+.env
