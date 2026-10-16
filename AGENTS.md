@@ -16,7 +16,7 @@ Repo: https://github.com/Krrish-Kumar-Tanti/Alexa-Demo · Local root: repo root 
    - NO `match` statements, NO `list[dict]`/`dict[str, Any]` annotations (use `typing.List/Dict`), NO `mcp`/`fastmcp`/`strands` SDK imports.
    - `requirements.txt` stays: `fastapi==0.109.2`, `uvicorn==0.27.1`, `pydantic==2.6.1`, `httpx==0.27.0` (test only). `boto3` is OPTIONAL, lazily imported inside `try_bedrock_reply()` only.
 2. **Contracts judges verify — keep stable:**
-   - MCP: `POST /mcp` JSON-RPC 2.0 with methods `initialize` → `protocolVersion "2025-11-25"`, `tools/list` → these 5 names, `tools/call` → `{content, structuredContent}`. Tool names: `get_calendar`, `tv_control`, `door_status`, `order_groceries`, `remind_grandma` (append new tools, never rename).
+   - MCP: `POST /mcp` JSON-RPC 2.0 with methods `initialize` → `protocolVersion "2025-11-25"`, `tools/list` → these 7 names, `tools/call` → `{content, structuredContent}`. Tool names: `get_calendar`, `tv_control`, `door_status`, `order_groceries`, `remind_grandma`, `propose_order`, `confirm_order` (append new tools, never rename).
    - API: `POST /api/chat` in `{message, history, profile}` → out `{reply, cards, tools_used, mcp_imported}`. `GET /api/health` → `{ok:true}`. `GET /` serves `app/index.html`; `/app/*` static.
    - Agent entry: `agent/agent.py:run_agent(user_text, history, profile)` must always return without raising (mock fallback).
 3. **No build step for UI.** `app/` is vanilla HTML/CSS/JS served by FastAPI. No npm/vite/webpack. Keep it that way until after submission.

@@ -13,6 +13,7 @@ Family Captain is a web app that simulates Alexa+ orchestrating a household in a
 - **Memory** — conversation history persists across restarts; the UI shows the running chat count.
 - **Voice input** — microphone via Web Speech API (Chrome), with typing as the universal fallback.
 - **Bedrock upgrade path** — set `USE_BEDROCK=1` and replies are polished by Claude Sonnet; without keys the built-in brain answers identically-structured responses.
+- **Confirm gate** — ad-hoc orders are staged as proposals and execute only after an explicit Confirm (or are cancelled). Every tool call lands in an append-only audit ledger viewable at `GET /api/audit`.
 
 ## Hero demo
 
@@ -45,6 +46,8 @@ Chat reply + visual cards + tool-call badges
 | `door_status` | Front-door camera: last package/motion event |
 | `order_groceries` | Snack and grocery ordering with ETA |
 | `remind_grandma` | Elderly check-in message + video-call scheduling |
+| `propose_order` | Stages an order as a proposal — nothing executes without approval |
+| `confirm_order` | Approves/declines a staged order, one-time per proposal |
 
 Protocol: MCP `2025-11-25` over Streamable HTTP — `POST /mcp` (JSON-RPC 2.0: `initialize`, `tools/list`, `tools/call`, `ping`), `GET /mcp` stream placeholder, `GET /health`. Built on plain FastAPI so it runs on Python 3.9+ with no SDK required.
 
@@ -56,6 +59,7 @@ Protocol: MCP `2025-11-25` over Streamable HTTP — `POST /mcp` (JSON-RPC 2.0: `
 | `POST /api/chat` `{message, history, profile}` | Returns `{reply, cards, tools_used, mcp_imported, chat_count}` |
 | `GET /api/health` | Health check |
 | `GET /api/memory` | Persisted chat history and count |
+| `GET /api/audit` | Newest-first audit ledger of tool calls |
 
 ## Quickstart (2 minutes, Python 3.9+)
 
@@ -88,7 +92,7 @@ import sys; sys.path.insert(0,'mcp-server'); sys.path.insert(0,'api')
 from server import app as m; from main import app as a
 c, c2 = TestClient(m), TestClient(a)
 assert c.get('/health').json()['protocol'] == '2025-11-25'
-assert len(c.post('/mcp', json={'jsonrpc':'2.0','id':1,'method':'tools/list','params':{}}).json()['result']['tools']) == 5
+assert len(c.post('/mcp', json={'jsonrpc':'2.0','id':1,'method':'tools/list','params':{}}).json()['result']['tools']) == 7
 assert 'Front door' in c2.post('/api/chat', json={'message':'who is at the front door?'}).json()['reply']
 assert len(c2.post('/api/chat', json={'message':'movie night with kids'}).json()['tools_used']) == 4
 assert 'Grandma' in c2.post('/api/chat', json={'message':'check in on grandma'}).json()['reply']

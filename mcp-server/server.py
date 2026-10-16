@@ -18,6 +18,9 @@ Upgrade path: swap to FastMCP SDK when you have Python 3.10+ - tool names stay s
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
 import copy
+import json
+import os
+import time
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -43,6 +46,7 @@ STATE = {
     },
     "orders": [],
     "reminders": [],
+    "proposals": {},
 }
 
 
@@ -89,6 +93,39 @@ def tool_order_groceries(items: List[str] = None, address: str = "home") -> Dict
     }
     STATE["orders"].append(order)
     return copy.deepcopy(order)
+
+
+def tool_propose_order(items: List[str] = None, address: str = "home") -> Dict[str, Any]:
+    """Stage a grocery order as a proposal. Nothing is ordered until confirm_order approves it."""
+    if not items:
+        items = ["popcorn"]
+    pid = "PROP-%s" % datetime.now().strftime("%H%M%S")
+    proposal = {
+        "proposal_id": pid,
+        "action": "order",
+        "items": items,
+        "address": address,
+        "status": "awaiting_confirmation",
+    }
+    STATE["proposals"][pid] = proposal
+    return copy.deepcopy(proposal)
+
+
+def tool_confirm_order(proposal_id: str = "", confirmed: bool = True) -> Dict[str, Any]:
+    """Approve or decline a staged order. One-time: each proposal can be answered exactly once."""
+    prop = STATE["proposals"].get(proposal_id)
+    if prop is None:
+        return {"ok": False, "error": "unknown proposal: %s" % proposal_id}
+    if prop.get("status") != "awaiting_confirmation":
+        return {"ok": False, "error": "proposal already answered",
+                "proposal_id": proposal_id, "status": prop.get("status")}
+    if not confirmed:
+        prop["status"] = "cancelled"
+        return {"ok": True, "proposal_id": proposal_id, "status": "cancelled"}
+    order = tool_order_groceries(items=prop["items"], address=prop["address"])
+    prop["status"] = "executed"
+    prop["order"] = order
+    return {"ok": True, "proposal_id": proposal_id, "status": "executed", "order": order}
 
 
 def tool_remind_grandma(message: str = "", call_time: str = "") -> Dict[str, Any]:
@@ -160,27 +197,85 @@ TOOLS = [
             },
         },
     },
+    {
+        "name": "propose_order",
+        "description": "Stage a grocery order as a proposal. Nothing is ordered until confirm_order approves it.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "items": {"type": "array", "items": {"type": "string"}},
+                "address": {"type": "string", "default": "home"},
+            },
+        },
+    },
+    {
+        "name": "confirm_order",
+        "description": "Approve or decline a staged order proposal. Each proposal can be answered exactly once.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "proposal_id": {"type": "string"},
+                "confirmed": {"type": "boolean", "default": True},
+            },
+        },
+    },
 ]
+
+
+_ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_AUDIT_FILE = os.path.join(_ROOT_DIR, "data", "audit.jsonl")
+
+
+def _log_audit(tool: str, args: Dict[str, Any], ok: bool) -> None:
+    """Append one tool call to the audit ledger. Never raises."""
+    try:
+        os.makedirs(os.path.dirname(_AUDIT_FILE), exist_ok=True)
+        entry = {"ts": int(time.time()), "tool": tool, "args": args, "ok": ok}
+        with open(_AUDIT_FILE, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+    except Exception as e:
+        print("[audit fallback] %s" % e)
+
+
+def read_audit(limit: int = 20) -> List[Dict[str, Any]]:
+    """Return newest-first audit entries. Importable by api/ for the UI panel."""
+    try:
+        with open(_AUDIT_FILE, "r", encoding="utf-8") as f:
+            lines = f.readlines()[-limit:]
+        return list(reversed([json.loads(l) for l in lines if l.strip()]))
+    except Exception:
+        return []
 
 
 def dispatch_tool(name: str, args: Dict[str, Any]) -> Dict[str, Any]:
     if args is None:
         args = {}
-    if name == "get_calendar":
-        return tool_get_calendar(day=args.get("day", "today"))
-    if name == "tv_control":
-        return tool_tv_control(
-            action=args.get("action", "status"),
-            app=args.get("app", ""),
-            title=args.get("title", ""),
-        )
-    if name == "door_status":
-        return tool_door_status(camera=args.get("camera", "front-door"))
-    if name == "order_groceries":
-        return tool_order_groceries(items=args.get("items", ["popcorn"]), address=args.get("address", "home"))
-    if name == "remind_grandma":
-        return tool_remind_grandma(message=args.get("message", ""), call_time=args.get("call_time", ""))
-    raise ValueError("unknown tool: %s" % name)
+    try:
+        if name == "get_calendar":
+            out = tool_get_calendar(day=args.get("day", "today"))
+        elif name == "tv_control":
+            out = tool_tv_control(
+                action=args.get("action", "status"),
+                app=args.get("app", ""),
+                title=args.get("title", ""),
+            )
+        elif name == "door_status":
+            out = tool_door_status(camera=args.get("camera", "front-door"))
+        elif name == "order_groceries":
+            out = tool_order_groceries(items=args.get("items", ["popcorn"]), address=args.get("address", "home"))
+        elif name == "remind_grandma":
+            out = tool_remind_grandma(message=args.get("message", ""), call_time=args.get("call_time", ""))
+        elif name == "propose_order":
+            out = tool_propose_order(items=args.get("items"), address=args.get("address", "home"))
+        elif name == "confirm_order":
+            out = tool_confirm_order(proposal_id=args.get("proposal_id", ""), confirmed=args.get("confirmed", True))
+        else:
+            raise ValueError("unknown tool: %s" % name)
+    except Exception:
+        _log_audit(name, args, False)
+        raise
+    _log_audit(name, args, True)
+    return out
 
 
 @app.get("/health")

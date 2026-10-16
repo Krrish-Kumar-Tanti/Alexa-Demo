@@ -1,0 +1,10 @@
+{"ts": 1792173969, "tool": "propose_order", "args": {"via": "agent", "user": "order popcorn"}, "ok": true}
+{"ts": 1792173969, "tool": "confirm_order", "args": {"via": "agent", "user": "confirm"}, "ok": true}
+{"ts": 1792173969, "tool": "propose_order", "args": {"via": "agent", "user": "order samosa"}, "ok": true}
+{"ts": 1792173969, "tool": "confirm_order", "args": {"via": "agent", "user": "cancel"}, "ok": true}
+{"ts": 1792173969, "tool": "get_calendar", "args": {"via": "agent", "user": "movie night with kids"}, "ok": true}
+{"ts": 1792173969, "tool": "tv_control", "args": {"via": "agent", "user": "movie night with kids"}, "ok": true}
+{"ts": 1792173969, "tool": "door_status", "args": {"via": "agent", "user": "movie night with kids"}, "ok": true}
+{"ts": 1792173969, "tool": "order_groceries", "args": {"via": "agent", "user": "movie night with kids"}, "ok": true}
+{"ts": 1792173969, "tool": "remind_grandma", "args": {"via": "agent", "user": "check in on grandma"}, "ok": true}
+{"ts": 1792173969, "tool": "get_calendar", "args": {"via": "agent", "user": "check in on grandma"}, "ok": true}

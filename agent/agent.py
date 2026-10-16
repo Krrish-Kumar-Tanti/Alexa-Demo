@@ -27,6 +27,8 @@ try:
         tool_door_status,
         tool_order_groceries,
         tool_remind_grandma,
+        tool_propose_order,
+        tool_confirm_order,
     )
     MCP_IMPORTED = True
 except Exception:
@@ -46,6 +48,16 @@ except Exception:
 
     def tool_remind_grandma(message="", call_time=""):
         return {"reminder_id": "REM-MOCK", "to": "Grandma", "message": message or "Hi Grandma!", "call_scheduled": call_time or "Tomorrow 10:00", "status": "sent"}
+
+    def tool_propose_order(items=None, address="home"):
+        return {"proposal_id": "PROP-MOCK", "action": "order", "items": items or [],
+                "address": address, "status": "awaiting_confirmation"}
+
+    def tool_confirm_order(proposal_id="", confirmed=True):
+        return {"ok": False, "error": "mock mode"}
+
+
+_PENDING_PROPOSAL = None  # staged order awaiting user approval (same-process API only)
 
 
 def try_bedrock_reply(user_text: str, context: str) -> str:
@@ -109,6 +121,12 @@ def save_memory(user_text: str, reply: str) -> int:
 
 
 def _finish(user_text: str, reply: str, cards: List[Dict[str, Any]], tools_used: List[str]) -> Dict[str, Any]:
+    try:
+        from server import _log_audit  # type: ignore
+        for tname in tools_used:
+            _log_audit(tname.split(":")[0], {"via": "agent", "user": user_text}, True)
+    except Exception:
+        pass
     chat_count = save_memory(user_text, reply)
     return {
         "reply": reply,
@@ -128,6 +146,24 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
     t = user_text.lower()
     tools_used: List[str] = []
     cards: List[Dict[str, Any]] = []
+    global _PENDING_PROPOSAL
+
+    # --- Confirm / cancel a staged order (nothing executes without approval) ---
+    if any(k in t for k in ["confirm", "place it", "yes, order", "yes order"]) and _PENDING_PROPOSAL:
+        res = tool_confirm_order(_PENDING_PROPOSAL, True); tools_used.append("confirm_order")
+        _PENDING_PROPOSAL = None
+        if res.get("ok") and res.get("status") == "executed":
+            order = res["order"]
+            text = "Confirmed! Order %s is placed (%s). Arriving by %s." % (
+                order.get("order_id"), ", ".join(order.get("items", [])), order.get("eta"))
+            cards = [{"type": "order", "title": "Order %s" % order.get("order_id", ""), "detail": order}]
+        else:
+            text = "That confirmation didn't go through (%s). Tell me what to order and I'll stage it again." % res.get("error", "unknown")
+        return _finish(user_text, text, cards, tools_used)
+    if any(k in t for k in ["cancel", "decline", "never mind", "don't order", "dont order"]) and _PENDING_PROPOSAL:
+        tool_confirm_order(_PENDING_PROPOSAL, False); tools_used.append("confirm_order:decline")
+        _PENDING_PROPOSAL = None
+        return _finish(user_text, "Cancelled — nothing was ordered.", [], tools_used)
 
     # --- Full movie-night orchestration (hero demo flow) ---
     if ("movie" in t and "night" in t) or ("movie night" in t):
@@ -162,9 +198,11 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
         return _finish(user_text, text, cards, tools_used)
 
     if any(k in t for k in ["order", "popcorn", "groceries", "buy", "snack"]):
-        order = tool_order_groceries(["popcorn", "samosa"]); tools_used.append("order_groceries")
-        text = "Done! Ordered popcorn + samosa (%s). Arriving by %s." % (order.get("order_id"), order.get("eta"))
-        cards = [{"type": "order", "title": "Order confirmed", "detail": order}]
+        prop = tool_propose_order(["popcorn", "samosa"]); tools_used.append("propose_order")
+        _PENDING_PROPOSAL = prop.get("proposal_id")
+        text = ("I've staged popcorn + samosa for home delivery. Reply 'confirm' to place the order, "
+                "or 'cancel' to drop it — nothing is ordered until you approve.")
+        cards = [{"type": "order_proposal", "title": "Confirm your order", "detail": prop}]
         return _finish(user_text, text, cards, tools_used)
 
     if any(k in t for k in ["calendar", "schedule", "meeting", "plan", "free", "homework"]):

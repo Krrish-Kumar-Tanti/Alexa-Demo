@@ -18,6 +18,7 @@ if os.path.join(_ROOT, "mcp-server") not in sys.path:
     sys.path.insert(0, os.path.join(_ROOT, "mcp-server"))
 
 from agent import run_agent, load_memory  # type: ignore
+from server import read_audit  # type: ignore
 
 app = FastAPI(title="Family Captain API")
 APP_DIR = os.path.join(_ROOT, "app")
@@ -38,6 +39,11 @@ def health():
 def memory():
     mem = load_memory()
     return {"total_chats": len(mem), "history": mem}
+
+
+@app.get("/api/audit")
+def audit(limit: int = 20):
+    return {"entries": read_audit(limit)}
 
 
 @app.post("/api/chat")
