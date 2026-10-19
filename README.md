@@ -8,7 +8,7 @@ If you're new here (hi, Krrish), read this file top to bottom. It teaches the pr
 
 Everything in this repo is one of three things. Learn these and you understand 90% of it:
 
-**1. The hands — `mcp-server/server.py`.** A small server that exposes 12 "tools" (calendar, TV, door camera, grocerynung cart, orders, reminders…). It speaks an open Amazon-backed standard called MCP, which is just a fixed way of saying *"here are my tools, call them like this."* When anyone — our app, or one day real Alexa+ — wants something done, they call a tool here.
+**1. The hands — `mcp-server/server.py`.** A small server that exposes 12 "tools" (calendar, TV, door camera, grocery cart, orders, reminders…). It speaks an open Amazon-backed standard called MCP, which is just a fixed way of saying *"here are my tools, call them like this."* When anyone — our app, or one day real Alexa+ — wants something done, they call a tool here.
 
 **2. The receptionist — `agent/agent.py`.** Takes your sentence, figures out which tools to call, and writes the reply. Today it matches keywords ("door" → door tool). When AWS approves our account, a real AI model (Nova/Claude via Bedrock) takes over the thinking. Same tools, smarter receptionist.
 
