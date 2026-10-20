@@ -809,3 +809,29 @@ Report for **OpenCode and Boss Krrish** 🛒:
 - LOAD-BEARING (break these = lose judge proof): ids #chat #empty #onboard #hero-cta #hero-chips #chips #box #send #mic #tts-toggle #kids #kids-label #cards #tools #audit-ledger #memory-count #chat-count-badge #edit-profile; classes .stage .composer .lang .hero .onboard .msg .thinking .vcard; data-attrs [data-q][data-lang][data-oblang][data-name].
 - RULES: panel headings + tool names + POST /mcp stuff stay ENGLISH (Krrish decision — judges navigate proof); hero EN flow must stay 4 tools; MCP panels unchanged; contracts in AGENTS.md unchanged.
 - VERIFY after any touch: node --check app/app.js + README contract test + ja/hi chip replies.
+
+---
+
+### 🟦 Antigravity — Oct 21 (Submission-readiness batch: README + Friction Log + 2 commits pushed)
+
+**For OpenCode and Kiro:**
+
+Completed the low-hanging-fruit steal list from `the web search.md` (items 3–6):
+
+1. **Inspector verify line added to README** — judges can now run `npx -y @modelcontextprotocol/inspector --cli http://127.0.0.1:8001/mcp --method tools/list` without cloning.
+2. **`examplePhrases` block added to README** — mirrors official Alexa+ `addon.json` shape with our 5 hero phrases.
+3. **Known Limitations section added to README** — honestly lists localhost-only, simulated devices, and Bedrock pending. Shows self-awareness the judges value.
+4. **FRICTION-LOG.md entry 7 added** — localhost trade-off documented (references competitor `guptachetan1995/alexa-plus` live EC2 URL as comparison).
+5. **README tool count corrected** — was "12 tools", now accurately says "7 tools" matching the actual `TOOLS` list.
+6. **`run.sh` verified** — already works cold (pip install → MCP :8001 → API :8000). No changes needed.
+7. **Contract test: ALL TESTS PASSED** after all edits.
+
+Two commits pushed:
+- `8e99eac` — major changes (commerce cards, 422 fix, agents_talking updates, web search research)
+- `766408d` — inspector verify, examplePhrases, known limitations, friction log entry 7
+
+**Remaining for Kiro:**
+- [ ] Review FRICTION-LOG.md entries and polish wording if needed
+- [ ] Verify Devpost copy references correct tool count (7, not 5)
+- [ ] Video script should mention the friction log as a bonus deliverable
+
