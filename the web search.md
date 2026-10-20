@@ -69,3 +69,21 @@ Do in order 3 → 4 → 5 → 6 (all <2 h total, zero risk), then 2, then 1.
 - Competitors: https://github.com/guptachetan1995/alexa-plus · https://github.com/dl88jing/northbridge-alexa-mcp
 - Real-device MCP (rejected): https://github.com/serversmx/alexa-mcp · https://github.com/m0nkmaster/alexa-mcp · https://github.com/snordquist/alexa-mcp
 - Old SDK (rejected): https://github.com/alexa-samples · https://github.com/alexa (new ASK home)
+
+
+---
+
+## Oct 20: repo scan — direct competitors found + resource check
+
+### Same-hackathon entries (verified on GitHub)
+1. **ASAYAMedia/amazon-alexa-mcp-hackathon** — same contest, Alexa+ track. MCP server (memory+tasks+calendar+proactive alerts, tags/importance scoring, Docker, SSE sessions). Server-side only, no UI sim, no voice, no multilingual.
+2. **guptachetan1995/alexa-plus** — closest twin: smart-home MCP server (Express + official SDK, 2025-11-25, sessions) + **simulated Alexa+ React client (no build step)** + propose->confirm->execute + audit log, live at EC2 http://16.176.3.215:3000/mcp. Gaps they admit: no real-model run recorded, everything in-memory, no Alexa surface, no voice.
+- **Our edge vs both:** EN/HI/JA voices (real Polly Takumi/Kajal MP3s), onboarding profile + memory, rich cards per tool, hero one-sentence 4-tool orchestration, mock-data display localization, chain-of-proof panels. **Their edge:** live EC2 hosting (ours localhost) — worth one line in Devpost as known-limitation + "run.sh runs anywhere".
+- Not-competitors Clarification: serversmx/alexa-mcp + Pipedream endpoints = control real Alexa devices for Claude-type clients (different use case); e2b/d8k/gabrimatic etc = generic web-search/MCP tools.
+
+### Hackathon resources reviewed
+- **MCP Apps / ext-apps (apps.extensions.modelcontextprotocol.io):** extension spec 2026-01-26 — tools can declare `ui://` HTML resources rendered inside hosts (Claude/ChatGPT) via sandboxed iframe; ships 4 Agent Skills incl. *add-app-to-server*. Requires Node 20 + SDK 2.x. **Verdict: skip refactoring ours now** (zero-build vanilla UI + Py3.9 MCP is already live; porting to MCP Apps violates both constraints). Note it as "future" in Devpost + friction log already says SDK needs Py3.10+.
+- **Spec transport 2025-11-25 (modelcontextprotocol.io):** Streamable HTTP = single /mcp endpoint POST + optional GET SSE. We implement POST/init/tools/list/tools/call over Streamable HTTP + GET SSE placeholder — **already compliant**; no action.
+- **github.com/AmazonAppDev (25 repos):** all Fire TV / Vega OS / Fire tablet samples + IAP/billing + `devices-agent-skills` (Agent Skills for Amazon Devices — the *other* track path). Nothing MCP/Alexa+ relevant to our build; rule reminder stays: no Fire TV/Vega wording in our repo. `devices-agent-skills` = optional inspiration only if we ever build a real Agent Skill.
+
+**Bottom line:** nobody combines simulated-Alexa+ UI + real MCP + multilingual voice + family orchestration. Differentiators hold. Do NOT break contracts chasing MCP Apps/hours; deadline Thursday.

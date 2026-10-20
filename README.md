@@ -115,6 +115,18 @@ print('ALL TESTS PASSED')"
 
 Local AWS keys live ONLY in repo-root `.env` (git-ignored, never committed). Without it, mocks cover everything.
 
+## Languages & profile (new)
+
+First visit shows a 10-second onboarding: pick who Alexa calls you, the language, done — saved in your browser (`fc_profile`). Switch language any time with the 🌐 chip next to the mic:
+
+| Lang | Alexa speaks with | Try |
+|---|---|---|
+| English | Polly Joanna (`en-US`) | `movie night with kids` |
+| हिन्दी (roman) | Polly Kajal (`hi-IN`) | `movie night aaj karna hai`, `dadi se baat karao`, `darwaza` |
+| 日本語 | Polly Takumi (`ja-JP`) | `映画の夜の準備`, `玄関はどう？` |
+
+Voice switching is real Polly speech (verified MP3s), replies and UI chrome switch too. Tool names and the `POST /mcp` panels stay English on purpose — they're protocol identifiers for judges to inspect. Bedrock (when it clears) gets told the reply language too; mock brain covers otherwise.
+
 ## License
 
 MIT — see `LICENSE`.

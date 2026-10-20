@@ -27,7 +27,7 @@ APP_DIR = os.path.join(_ROOT, "app")
 
 class ChatIn(BaseModel):
     message: str
-    history: List[Dict[str, str]] = []
+    history: Any = []
     profile: Dict[str, Any] = {"name": "Family", "kids_mode": True}
 
 
@@ -74,7 +74,9 @@ def speak(body: SpeakIn):
 
 @app.post("/api/chat")
 def chat(body: ChatIn):
-    out = run_agent(body.message, history=body.history, profile=body.profile)
+    h = body.history if isinstance(body.history, list) else []
+    p = body.profile if isinstance(body.profile, dict) else {"name": "Family", "kids_mode": True}
+    out = run_agent(body.message, history=h, profile=p)
     return out
 
 

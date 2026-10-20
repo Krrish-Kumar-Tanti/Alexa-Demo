@@ -768,3 +768,44 @@ Report for **OpenCode and Boss Krrish** 🛒:
 
 ### OpenCode — Oct 20 (UI redesign, Krrish-directed)
 - Krrish ordered OpenCode (not Antigravity) to redesign `app/*` visuals this round. Done: new Claude/ChatGPT-style calm layout — hero empty-state ("What should the family do tonight?" + hero CTA), floating composer, Ctrl-center conversation column, word-by-word reply reveal, thinking dots, staggered card cascade, kids-mode switch, refined cards/panels, reduced-motion + responsive. Full rewrite of `styles.css`; `index.html` restructured; `app.js` got new reveal/toggle logic. ALL ids/contracts untouched (same /api/chat + MCP contracts, hero still 4 tools). Verified: node --check OK, assets 200, contract test ALL TESTS PASSED. Antigravity: build on this baseline; do not swap palette/radius tokens (`--accent`, `--radius`); ids `#empty #chips .composer .stage` are load-bearing.
+
+
+### OpenCode — Oct 20 (onboarding + 3-language assistant, Krrish-directed build)
+- Shipped: first-run onboarding (name chips + custom, language EN/HI/JA) → profile in localStorage `fc_profile`, sent via existing `profile` field (contract unchanged). Language chip in composer (EN/हिं/日本語) switches UI chrome strings, hero personalization (\"Ready when you are, NAME.\"), suggestion chips, and Alexa voice: Polly Joanna/Kajal/Takumi voice sent via existing optional `voice` field on /api/speak (Kenji is NOT a valid Polly voice here — enum check caught it, Takumi is the male ja-JP neural). `agent/agent.py`: 3-language keyword sets + per-branch reply templates (hi is code-mixed romanized per Krrish: \"sab shaant hai\" style), grandma check-in message per lang, Bedrock prompt gets reply-language hint. MCP panels/tool names stay English (Krrish: judges navigate proof faster). Files: agent/agent.py (rewrite), app/app.js (rewrite: profile+i18n+onboarding), app/index.html (onboard panel, lang chips, edit-profile pill), app/styles.css (append-only additions), README.md (Languages section). Antigravity: build on baseline — load-bearing ids `#onboard #empty #hero-chips .lang [data-oblang]`, do not change `--accent`/`--radius` tokens, panel headings intentionally English.
+- Verified: node --check OK, py_compile OK, contract test ALL TESTS PASSED (English hero still 4 tools), ja reply via 玄関はどう？=1 tool, hi reply via dadi se baat karao=2 tools, real Polly MP3s for Joanna/Kajal/Takumi (3/3 audio_b64).
+
+
+### OpenCode — Oct 20 (bugfix: ghost server + undefined bubbles)
+- Krrish hit "undefined" + error bubbles in browser. Diagnosis: TWO processes were bound to :8000 (stale ghost) — the browser kept answering from a half-dead process while curl hit the good one; also app.js had no guards, so a non-chat payload rendered "undefined" and speak(undefined) threw. Fixes: killed both, restarted ONE clean pair (MCP :8001, API :8000, nohup so they survive the shell). app.js: send() now checks r.ok + reply-is-string, speak() guards empty text. Verified live: 18/18 queries across EN/HI/JA return proper replies/tools (200s), proposal→confirm gate works in the live process, contract test re-run: ALL TESTS PASSED.
+
+---
+
+### 🟦 Antigravity — Oct 20 (Fix: "Server band hai" 422 error + Verified Live Localhost)
+- **Root Cause of the Screenshot Error**: In `app/app.js`, `let history = [];` was omitted during the recent rewrite. In browsers, referencing an undeclared `history` references `window.history` (DOM History API object). When serialized with `JSON.stringify(history)`, it passed `{}` instead of an Array `[]` to `POST /api/chat`. FastAPI's Pydantic model threw a `422 Unprocessable Entity` validation error. `send()` caught this HTTP error and printed the fallback error message: `"Server band hai — ./run.sh chalaiye, fir try kijiye."`
+- **Fixes Applied**:
+  1. `app/app.js`: Explicitly declared and initialized `let history = [];`.
+  2. `api/main.py`: Updated `ChatIn.history: Any = []` and added defensive normalization: `h = body.history if isinstance(body.history, list) else []` and sanitized `profile` dict so malformed browser history can never trigger a 422 again.
+- **Verification**:
+  - `POST /api/chat` with `{"message":"darwaza pe kaun hai?","history":[],"profile":{"name":"Family","lang":"hi","kids_mode":true}}` → **200 OK** returning Hindi door status (`"Darwaza: Package delivered - front door, 17:42 baje. Abhi sab shaant hai. Snapshot TV par dikhau?"`), `door` card, and `door_status` tool badge.
+  - `POST /api/speak` with `voice: "Kajal"` → **200 OK** returning real AWS Polly Neural Voice audio MP3.
+  - MCP `:8001` healthy (`/health` → all 7 tools).
+  - API `:8000` healthy (`/api/health` → 200 OK).
+
+
+### OpenCode — Oct 20 (demo polish: localized mock data + card captions)
+- Demo polish per Krrish: mock-data strings now localize at agent display level — calendar events (す: Kids homework + dinner → 子どもの宿題＋ばんごはん / Kids ka homework + dinner), door event, Grandma call time (Tomorrow 10:00 → Kal 10:00 baje / 明日 10:00), card titles, TV on/off words. MCP server keeps honest English data; agent translates only what it SHOWS (service contract untouched). app.js card captions (badges, ETAs, proposal buttons, confirm/cancel) now come from the i18n dict per language. Verified: node --check, py_compile, EN contract test ALL TESTS PASSED, ja/hi replies + card payloads localized, live server restarted and curl-verified.
+
+
+### OpenCode full handoff to Antigravity — Oct 20 (read THIS before touching app/*)
+- STATUS: ALL TESTS PASSED. Everything below is live in master-ready working tree.
+- OpenCode owns now (Krrish reassigned from you): ALL of app/* + agent.py multilingual brain. Do not re-do, only build on top.
+- SHIPPED:
+  1) Redesign: calm Claude/ChatGPT-style layout — hero empty-state (#empty), stage wrapper, floating composer, right proof sidebar, thinking dots, word-by-word reply reveal, staggered card cascade, kids toggle switch, reduced-motion + responsive. styles.css fully rewritten (tokens: --accent #66d9f2, --panel, --radius 14px — keep these).
+  2) De-AI copy pass: all card captions + agent reply strings rewritten human (no Care-Loop/Guardrail jargon).
+  3) Onboarding: #onboard panel on first visit (0 chats) — name chips + language, saved in localStorage `fc_profile`, ✏️ edit-profile pill reopens it. Profile flows via existing /api/chat profile field (contract UNCHANGED).
+  4) 3 languages EN/HI/JA: 🌐 chip in composer. UI chrome + suggestions from I18N dict in app.js. Voice = Polly via existing optional `voice` field on /api/speak: Joanna en-US / Kajal hi-IN / Takumi ja-JP (Kenji is INVALID Polly voice — do not use; verified enum). Mic rec.lang follows.
+  5) agent/agent.py: keyword router recognizes EN + roman-Hindi (movie night, darwaza, dadi, samosa...) 日本語 (映画, 玄関, ポップコーン, 予定, 祖母...) mapped to SAME branches; per-language reply templates (_T); mock-data display localization (_DISPLAY_LABELS: events/door/call-time; card titles; TV オン/オフ; ja calendar joiner 「、」）). MCP server keeps ENGLISH data contract — the agent translates only display. Bedrock prompt gets reply-language hint (dormant until account clears).
+  6) Bugfix: ghost duplicate process on :8000 was causing undefined+error double bubbles — killed, now one clean pair via nohup (MCP :8001, API :8000). app.js send() now guards r.ok + reply-is-string; speak() guards empty text.
+- LOAD-BEARING (break these = lose judge proof): ids #chat #empty #onboard #hero-cta #hero-chips #chips #box #send #mic #tts-toggle #kids #kids-label #cards #tools #audit-ledger #memory-count #chat-count-badge #edit-profile; classes .stage .composer .lang .hero .onboard .msg .thinking .vcard; data-attrs [data-q][data-lang][data-oblang][data-name].
+- RULES: panel headings + tool names + POST /mcp stuff stay ENGLISH (Krrish decision — judges navigate proof); hero EN flow must stay 4 tools; MCP panels unchanged; contracts in AGENTS.md unchanged.
+- VERIFY after any touch: node --check app/app.js + README contract test + ja/hi chip replies.

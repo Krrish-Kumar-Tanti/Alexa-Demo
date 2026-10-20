@@ -14,6 +14,7 @@
     <span class="pill" id="memory-pill">💾 <span id="memory-count">0 chats</span></span>
     <span class="pill">SIMULATED ALEXA+ EXPERIENCE</span>
     <span class="pill dim">MCP 2025-11-25 • Streamable HTTP</span>
+    <button class="pill linklike" id="edit-profile" title="Edit profile">✏️ profile</button>
   </div>
 </header>
 
@@ -24,35 +25,52 @@
 
       <div class="stage">
         <div id="chat" class="chat"></div>
-        <div id="empty" class="hero">
+
+        <div id="onboard" class="onboard" hidden>
           <span class="ring"></span>
-          <h1>What should the family do tonight?</h1>
-          <p>One ask — I line up the calendar, the living-room TV, the front door and snacks. Every tool call below runs on a real MCP server.</p>
-          <button class="hero-cta" data-q="movie night with kids">🎬 movie night with kids</button>
-          <div class="hero-chips">
-            <button data-q="who is at the front door?">🔔 front door?</button>
-            <button data-q="what's on my calendar today?">📅 calendar</button>
-            <button data-q="order popcorn and samosa">🍿 order snacks</button>
-            <button data-q="check in on grandma">👵 check on grandma</button>
+          <h1 id="ob-title">Let's get to know you</h1>
+          <p id="ob-sub">Ten seconds — then my memory is yours.</p>
+          <div class="onboard-q" id="ob-name-q">What should I call you?</div>
+          <div class="onboard-chips" id="ob-names">
+            <button data-name="Krrish" class="sel">Krrish</button>
+            <button data-name="Dad">Dad</button>
+            <button data-name="Mom">Mom</button>
+            <button data-name="Grandma">Grandma</button>
+            <button data-name="__custom" id="ob-custom-btn">✎ type</button>
           </div>
+          <input id="ob-name-input" class="ob-custom" placeholder="Type a name…" autocomplete="off" hidden />
+          <div class="onboard-q" id="ob-lang-q">Alexa ki zubaan — ことばをえらんでね</div>
+          <div class="onboard-chips" id="ob-langs">
+            <button data-oblang="en" class="sel">English</button>
+            <button data-oblang="hi">हिन्दी</button>
+            <button data-oblang="ja">日本語</button>
+          </div>
+          <button class="hero-cta" id="ob-done">Let's go →</button>
+        </div>
+
+        <div id="empty" class="hero" hidden>
+          <span class="ring"></span>
+          <h1 id="hero-title">What should the family do tonight?</h1>
+          <p id="hero-sub">One ask — I line up the calendar, the living-room TV, the front door and snacks. Every tool call below runs on a real MCP server.</p>
+          <button class="hero-cta" id="hero-cta" data-q="movie night with kids">🎬 movie night with kids</button>
+          <div class="hero-chips" id="hero-chips"></div>
         </div>
       </div>
 
-      <div class="chips" id="chips" hidden>
-        <button data-q="movie night with kids">🎬 movie night with kids</button>
-        <button data-q="who is at the front door?">🔔 front door?</button>
-        <button data-q="what's on my calendar today?">📅 calendar</button>
-        <button data-q="order popcorn and samosa">🍿 order snacks</button>
-        <button data-q="check in on grandma">👵 check on grandma</button>
-      </div>
+      <div class="chips" id="chips" hidden></div>
 
       <div class="composer">
         <button id="mic" title="Voice input (Chrome)">🎤</button>
         <button id="tts-toggle" title="Alexa voice: on" class="active">🔊</button>
+        <div class="lang" role="group" aria-label="Language">
+          <button data-lang="en" class="active">EN</button>
+          <button data-lang="hi">हिं</button>
+          <button data-lang="ja">日本語</button>
+        </div>
         <input id="box" placeholder="Ask anything — e.g. 'movie night with kids'" autocomplete="off" />
         <button id="send" title="Send">↑</button>
       </div>
-      <label class="kids"><input type="checkbox" id="kids" checked /><span class="sw"></span> Kids mode — kid-safe picks only</label>
+      <label class="kids"><input type="checkbox" id="kids" checked /><span class="sw"></span> <span id="kids-label">Kids mode — kid-safe picks only</span></label>
     </div>
   </section>
 

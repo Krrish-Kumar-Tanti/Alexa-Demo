@@ -625,6 +625,60 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
   .chat{scroll-behavior:auto}
 }
 
+/* ── Onboarding (first-run profile setup) ── */
+.onboard{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;text-align:center;padding:28px;overflow-y:auto;
+  background:var(--panel);z-index:5;
+  animation:hero-in .5s cubic-bezier(.16,1,.3,1);
+}
+.onboard[hidden]{display:none}
+.onboard .ring{width:20px;height:20px;border-width:3px}
+.onboard h1{font-size:24px;font-weight:700;letter-spacing:-.4px}
+.onboard p{font-size:13.5px;color:var(--ink-3);max-width:400px}
+.onboard-q{font-size:13px;color:var(--ink-2);font-weight:600;margin-top:8px}
+.onboard-chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.onboard-chips button{
+  background:transparent;color:var(--ink-2);
+  border:1px solid var(--line-strong);border-radius:99px;
+  padding:9px 18px;cursor:pointer;font-size:13px;font-weight:500;font-family:inherit;
+  transition:var(--t);
+}
+.onboard-chips button:hover{border-color:var(--accent);color:var(--accent)}
+.onboard-chips button.sel{
+  border-color:var(--accent);color:var(--accent);
+  background:var(--accent-soft);box-shadow:0 0 0 3px rgba(102,217,242,.08);
+}
+.ob-custom{
+  background:var(--panel-2);border:1px solid var(--line-strong);color:var(--ink);
+  border-radius:99px;padding:9px 18px;font-family:inherit;font-size:13.5px;width:min(260px,80%);
+  transition:var(--t);
+}
+.ob-custom:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.onboard .hero-cta{margin-top:12px}
+
+/* ── Language chip group (composer) ── */
+.lang{
+  display:flex;background:var(--panel-2);
+  border:1px solid var(--line);border-radius:99px;
+  padding:3px;gap:2px;flex:none;
+}
+.lang button{
+  border:none;background:transparent;color:var(--ink-3);
+  border-radius:99px;padding:7px 11px;
+  font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;
+  transition:var(--t);white-space:nowrap;
+}
+.lang button:hover{color:var(--accent)}
+.lang button.active{background:var(--accent);color:#062028}
+.pill.linklike{
+  background:var(--accent-soft);color:var(--accent);
+  border:1px solid rgba(102,217,242,.3);cursor:pointer;font-family:inherit;
+  transition:var(--t);
+}
+.pill.linklike:hover{background:rgba(102,217,242,.2)}
+
 /* ── Responsive ── */
 @media(max-width:1080px){
   .layout{grid-template-columns:1fr;padding:16px 16px 22px}
@@ -637,7 +691,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
   .badges .pill.dim{display:none}
   .layout{padding:12px 12px 20px}
   .chat{padding:16px}
-  .composer{padding:12px 12px 6px}
+  .composer{padding:12px 12px 6px;flex-wrap:wrap}
   .composer button{width:40px;height:40px}
+  .composer input{min-width:55%}
   .hero h1{font-size:22px}
 }
