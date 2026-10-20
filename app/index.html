@@ -20,38 +20,55 @@
 <main class="layout">
   <section class="chat-col">
     <div class="tv-frame">
-      <div class="tv-top"><span class="dot"></span><span class="dot"></span><span>Living-Room TV</span><span class="chat-counter-badge" id="chat-count-badge">Chat #0</span></div>
-      <div id="chat" class="chat"></div>
-      <div class="chips">
+      <div class="tv-top"><span>Living-Room TV</span><span class="chat-counter-badge" id="chat-count-badge">Chat #0</span></div>
+
+      <div class="stage">
+        <div id="chat" class="chat"></div>
+        <div id="empty" class="hero">
+          <span class="ring"></span>
+          <h1>What should the family do tonight?</h1>
+          <p>One ask — I line up the calendar, the living-room TV, the front door and snacks. Every tool call below runs on a real MCP server.</p>
+          <button class="hero-cta" data-q="movie night with kids">🎬 movie night with kids</button>
+          <div class="hero-chips">
+            <button data-q="who is at the front door?">🔔 front door?</button>
+            <button data-q="what's on my calendar today?">📅 calendar</button>
+            <button data-q="order popcorn and samosa">🍿 order snacks</button>
+            <button data-q="check in on grandma">👵 check on grandma</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="chips" id="chips" hidden>
         <button data-q="movie night with kids">🎬 movie night with kids</button>
         <button data-q="who is at the front door?">🔔 front door?</button>
         <button data-q="what's on my calendar today?">📅 calendar</button>
         <button data-q="order popcorn and samosa">🍿 order snacks</button>
         <button data-q="check in on grandma">👵 check on grandma</button>
       </div>
-      <div class="inputrow">
-        <button id="mic" title="Voice input">🎤</button>
-        <button id="tts-toggle" title="Alexa Voice (TTS)" class="active">🔊</button>
-        <input id="box" placeholder='Try: "movie night with kids"' autocomplete="off" />
-        <button id="send">Send</button>
+
+      <div class="composer">
+        <button id="mic" title="Voice input (Chrome)">🎤</button>
+        <button id="tts-toggle" title="Alexa voice: on" class="active">🔊</button>
+        <input id="box" placeholder="Ask anything — e.g. 'movie night with kids'" autocomplete="off" />
+        <button id="send" title="Send">↑</button>
       </div>
-      <label class="kids"><input type="checkbox" id="kids" checked /> Kids mode (kid-safe picks only)</label>
+      <label class="kids"><input type="checkbox" id="kids" checked /><span class="sw"></span> Kids mode — kid-safe picks only</label>
     </div>
   </section>
 
   <aside class="side-col">
     <div class="card">
-      <h3>Visual cards</h3>
-      <div id="cards"><p class="muted">Cards from Alexa will appear here (media, TV, door, order, reminders).</p></div>
+      <h3>Alexa's screen</h3>
+      <div id="cards"><p class="muted">When Alexa does something, its card shows up here.</p></div>
     </div>
     <div class="card">
-      <h3>MCP tool calls (live proof)</h3>
-      <div id="tools"><p class="muted">No tools called yet.</p></div>
+      <h3>MCP tool calls</h3>
+      <div id="tools"><p class="muted">None yet — ask Alexa something.</p></div>
       <p class="muted small">Backend: <code>POST /mcp</code> JSON-RPC • <code>mcp-server/server.py</code> • Agent: <code>agent/agent.py</code> (+ Bedrock optional)</p>
     </div>
     <div class="card">
-      <h3>Execution Audit Ledger</h3>
-      <div id="audit-ledger"><p class="muted">Awaiting tool calls...</p></div>
+      <h3>Audit trail</h3>
+      <div id="audit-ledger"><p class="muted">Nothing logged yet.</p></div>
       <p class="muted small">Persisted in <code>data/audit.jsonl</code> • <code>GET /api/audit</code></p>
     </div>
   </aside>

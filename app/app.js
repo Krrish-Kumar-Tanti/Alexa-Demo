@@ -2,16 +2,63 @@ const chat = document.getElementById("chat");
 const box = document.getElementById("box");
 const cardsEl = document.getElementById("cards");
 const toolsEl = document.getElementById("tools");
+const chipsEl = document.getElementById("chips");
+const emptyEl = document.getElementById("empty");
 let history = [];
 
-function bubble(who, text) {
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+function bubble(who, text){
   const d = document.createElement("div");
   d.className = "msg " + who;
-  d.innerHTML = (who === "alexa" ? "<b>Alexa+</b><br/>" : "<b>You</b><br/>") + escapeHtml(text);
+  const label = document.createElement("b");
+  label.textContent = who === "alexa" ? "Alexa+" : "You";
+  d.appendChild(label);
+  const body = document.createElement("span");
+  body.className = "msg-text";
+  d.appendChild(body);
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+  typeInto(body, text, who === "alexa" ? 1300 : 0);
+}
+
+function typeInto(el, text, dur){
+  text = String(text);
+  if(!dur){ el.textContent = text; return; }
+  // Word-by-word reveal, capped so long replies never feel slow.
+  const tokens = text.split(/(\s+)/).filter(x=>x !== "");
+  const step = Math.max(18, Math.min(60, dur / Math.max(1, tokens.length)));
+  let i = 0;
+  const iv = setInterval(()=>{
+    el.textContent += tokens[i];
+    i += 1;
+    const nearBottom = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 120;
+    if(nearBottom) chat.scrollTop = chat.scrollHeight;
+    if(i >= tokens.length) clearInterval(iv);
+  }, step);
+}
+
+function hideEmptyState(){
+  if(emptyEl && !emptyEl.classList.contains("fading")){
+    emptyEl.classList.add("fading");
+    setTimeout(()=>{ emptyEl.style.display = "none"; }, 250);
+    if(chipsEl) chipsEl.hidden = false;
+  }
+}
+
+function showThinking(){
+  const d = document.createElement("div");
+  d.className = "msg alexa thinking";
+  d.id = "thinking";
+  d.innerHTML = "<b>Alexa+</b><span class='dots'><i></i><i></i><i></i></span>";
   chat.appendChild(d);
   chat.scrollTop = chat.scrollHeight;
 }
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+function hideThinking(){
+  const d = document.getElementById("thinking");
+  if(d) d.remove();
+}
 
 let voiceEnabled = true;
 
@@ -32,10 +79,11 @@ function speak(text){
 function renderCards(cards){
   if(!cards || !cards.length) return;
   cardsEl.innerHTML = "";
-  cards.forEach(c=>{
+  cards.forEach((c,i)=>{
     const d=document.createElement("div");
     d.className="vcard";
     d.dataset.type = c.type;
+    d.style.animationDelay = (i * 0.09) + "s";
     let inner="";
 
     if(c.type==="media"){
@@ -44,8 +92,8 @@ function renderCards(cards){
         <div class="vcard-header">
           <span class="vcard-icon">🎬</span>
           <div>
-            <h4>${escapeHtml(c.title || "Tonight's Stream Picks")}</h4>
-            <span class="vcard-sub">Family streaming catalog</span>
+            <h4>${escapeHtml(c.title || "Tonight's picks")}</h4>
+            <span class="vcard-sub">Kid-safe for tonight</span>
           </div>
           <span class="badge-tag green">Kids-Safe ON</span>
         </div>
@@ -68,13 +116,13 @@ function renderCards(cards){
             <h4>${escapeHtml(c.title || "Living-Room TV")}</h4>
             <span class="vcard-sub">Living Room • 4K TV</span>
           </div>
-          <span class="badge-tag cyan">Active Session</span>
+          <span class="badge-tag cyan">Now playing</span>
         </div>
         <div class="tv-mockup">
           <div class="tv-screen">
             <div class="tv-screen-content">
               <span class="tv-app-pill">▶ App: <b>${escapeHtml(tv.app || "Movies")}</b></span>
-              <span class="tv-kids-tag">${tv.kids_mode ? "🛡️ Kids Mode (U/A Only)" : "Standard Mode"}</span>
+              <span class="tv-kids-tag">${tv.kids_mode ? "🛡️ Kids mode — only U/A" : "Kids mode off"}</span>
             </div>
           </div>
           <div class="tv-meta-row">
@@ -98,14 +146,14 @@ function renderCards(cards){
         <div class="camera-viewport">
           <div class="cam-scanline"></div>
           <div class="cam-overlay">
-            <span class="cam-badge">📹 Front Door Cam</span>
+            <span class="cam-badge">📹 Front door</span>
             <span class="cam-time">${escapeHtml(door.time || "Just now")}</span>
           </div>
           <div class="cam-event-banner">
             <span class="cam-event-icon">📦</span>
             <div class="cam-event-text">
               <b>${escapeHtml(door.last_event || "Motion detected")}</b>
-              <small>Doorbell AI Snapshot Verified</small>
+              <small>Last event from the front door</small>
             </div>
           </div>
         </div>
@@ -131,8 +179,8 @@ function renderCards(cards){
             <div class="p-step current"><span class="p-dot">●</span><span>On the Way</span></div>
           </div>
           <div class="order-eta">
-            <span>⏱️ Estimated Delivery: <b>~${escapeHtml(ord.eta || "30 min")}</b></span>
-            <span class="status-chip">Express Delivery</span>
+            <span>⏱️ Arriving by <b>${escapeHtml(ord.eta || "in 30 min")}</b></span>
+            <span class="status-chip">Grocery delivery</span>
           </div>
           <div class="order-items-list">
             ${items.map(it=>`
@@ -167,7 +215,7 @@ function renderCards(cards){
             </div>
           `).join("")}
           <div class="cal-free-highlight">
-            ✨ Free after 7:30 PM — Perfect for Family Movie Night!
+            Free after 7:30 PM — that's your movie-night window.
           </div>
         </div>
       `;
@@ -178,17 +226,17 @@ function renderCards(cards){
           <span class="vcard-icon">👵</span>
           <div>
             <h4>${escapeHtml(c.title || "Grandma Check-in")}</h4>
-            <span class="vcard-sub">Family Caretaking Care-Loop</span>
+            <span class="vcard-sub">Family check-ins</span>
           </div>
           <span class="badge-tag pink">Message Sent</span>
         </div>
         <div class="remind-card-body">
           <div class="remind-bubble">
-            <span class="bubble-tag">💌 Sent Message:</span>
+            <span class="bubble-tag">💌 Sent:</span>
             <p>"${escapeHtml(rem.message || "Hi Grandma! Just checking in — how are you feeling today?")}"</p>
           </div>
           <div class="remind-call-row">
-            <span>📞 Video Call Scheduled: <b>${escapeHtml(rem.call_scheduled || "Tomorrow 10:00")}</b></span>
+            <span>📞 Video call: <b>${escapeHtml(rem.call_scheduled || "Tomorrow 10:00")}</b></span>
             <span class="badge-tag green">Confirmed</span>
           </div>
         </div>
@@ -207,13 +255,13 @@ function renderCards(cards){
         </div>
         <div class="proposal-card-body">
           <div class="proposal-items">
-            <p>Staged items: <b>${items.map(i=>escapeHtml(i)).join(", ")}</b></p>
-            <p>Destination: <b>${escapeHtml(prop.address || "Home")}</b></p>
-            <small class="proposal-note">Alexa+ Guardrail: Real-world actions require explicit confirmation.</small>
+            <p>Items: <b>${items.map(i=>escapeHtml(i)).join(", ")}</b></p>
+            <p>Deliver to: <b>${escapeHtml(prop.address || "Home")}</b></p>
+            <small class="proposal-note">Nothing is ordered until you say confirm.</small>
           </div>
           <div class="proposal-actions">
-            <button class="btn-confirm" onclick="send('confirm')">✓ Confirm & Place Order</button>
-            <button class="btn-decline" onclick="send('cancel')">✕ Decline / Cancel</button>
+            <button class="btn-confirm" onclick="send('confirm')">✓ Confirm order</button>
+            <button class="btn-decline" onclick="send('cancel')">✕ Cancel</button>
           </div>
         </div>
       `;
@@ -230,7 +278,7 @@ function renderCards(cards){
 }
 
 function renderTools(tools){
-  if(!tools || !tools.length){ toolsEl.innerHTML='<p class="muted">No tools called (chit-chat).</p>'; return; }
+  if(!tools || !tools.length){ toolsEl.innerHTML='<p class="muted">None yet.</p>'; return; }
   toolsEl.innerHTML = tools.map(t=>'<span class="tool">🔧 '+escapeHtml(t)+"</span>").join(" ");
 }
 
@@ -242,7 +290,7 @@ async function fetchAuditLedger(){
     const d = await r.json();
     const entries = d.entries || [];
     if(!entries.length){
-      el.innerHTML = '<p class="muted">No tool executions recorded yet.</p>';
+      el.innerHTML = '<p class="muted">Nothing logged yet.</p>';
       return;
     }
     el.innerHTML = entries.slice(0, 5).map(e=>{
@@ -289,13 +337,17 @@ async function speakViaPolly(text){
 async function send(text){
   text = (text||box.value||"").trim();
   if(!text) return;
+  hideEmptyState();
+  hideThinking();
   box.value="";
   bubble("you", text);
   const kids = document.getElementById("kids").checked;
+  showThinking();
   try{
     const r = await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},
       body: JSON.stringify({message:text, history, profile:{name:"Family",kids_mode:kids}})});
     const out = await r.json();
+    hideThinking();
     bubble("alexa", out.reply);
     renderCards(out.cards);
     renderTools(out.tools_used);
@@ -307,18 +359,25 @@ async function send(text){
       updateChatCount(history.length + 1);
     }
     history.push({user:text, alexa:out.reply});
-  }catch(e){ bubble("alexa","Backend not running. Start API on :8000. ("+e+")"); }
+  }catch(e){
+    hideThinking();
+    bubble("alexa","Server's off — run ./run.sh and try again.");
+  }
 }
 
 document.getElementById("send").onclick=()=>send();
 box.addEventListener("keydown",e=>{if(e.key==="Enter")send();});
-document.querySelectorAll(".chips button").forEach(b=>b.onclick=()=>send(b.dataset.q));
+document.querySelectorAll("[data-q]").forEach(b=>b.addEventListener("click",()=>send(b.dataset.q)));
 
 // Voice input (Web Speech API, Chrome)
 document.getElementById("mic").onclick=()=>{
   const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){ alert("Voice needs Chrome. Type instead."); return; }
+  const mic = document.getElementById("mic");
   const rec=new SR(); rec.lang="en-US"; rec.start();
+  mic.classList.add("listening");
+  rec.onend=()=>mic.classList.remove("listening");
+  rec.onerror=()=>mic.classList.remove("listening");
   rec.onresult=e=>{ box.value=e.results[0][0].transcript; send(); };
 };
 
@@ -328,18 +387,16 @@ if(ttsBtn){
   ttsBtn.onclick=()=>{
     voiceEnabled = !voiceEnabled;
     ttsBtn.textContent = voiceEnabled ? "🔊" : "🔇";
-    ttsBtn.title = voiceEnabled ? "Alexa Voice: ON" : "Alexa Voice: Muted";
+    ttsBtn.title = voiceEnabled ? "Alexa voice: on" : "Alexa voice: muted";
     ttsBtn.classList.toggle("muted", !voiceEnabled);
     if(!voiceEnabled && window.speechSynthesis) window.speechSynthesis.cancel();
   };
 }
 
-// Initial load: check persisted memory count & audit ledger
+// Initial load: persisted memory count + audit ledger
 fetch("/api/memory")
   .then(r=>r.json())
   .then(d=>{ if(d && typeof d.total_chats === "number") updateChatCount(d.total_chats); })
   .catch(()=>{});
 
 fetchAuditLedger();
-
-bubble("alexa","Hi! I'm Family Captain (simulated Alexa+). Try 'movie night with kids' - I'll check calendar, TV, front door and order snacks in one go.");

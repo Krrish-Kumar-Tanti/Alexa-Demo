@@ -733,14 +733,38 @@ Update for **OpenCode and Boss Krrish** 🛠️:
 
 ### 🟦 Antigravity — UI (`app/*` only). In this order, against contracts above:
 
-- [ ] **Task C1 — product cards.** Price, rating, Add button (sends `add <name>`), works off `products` cards.
-- [ ] **Task C2 — cart panel.** Items, quantities, total, checkout button, works off `cart` cards.
-- [ ] **Task C3 — checkout sheet.** Mock wallet picker ("Visa ending 4321") + PIN pad sending 4 digits; Confirm/Decline stay as backup.
-- [ ] **Task C4 — tracking + history.** Timeline (Ordered → Packing → On the way) off `tracking` cards; list off `history` cards.
+- [x] **Task C1 — product cards.** Price, rating, Add button (sends `add <name>`), works off `products` cards.
+- [x] **Task C2 — cart panel.** Items, quantities, total, checkout button, works off `cart` cards.
+- [x] **Task C3 — checkout sheet.** Mock wallet picker ("Visa ending 4321") + PIN pad sending 4 digits; Confirm/Decline stay as backup.
+- [x] **Task C4 — tracking + history.** Timeline (Ordered → Packing → On the way) off `tracking` cards; list off `history` cards.
 
 ### 🟨 Kiro — copy. One task:
 
 - [ ] **Task K4 — commerce copy refresh.** Devpost description + feedback: tool count 7 → 12, add the "order my usual → PIN → tracking" demo beat, UCP-mirroring language (sessions, voice-PIN authorization, wallet picker), keep everything else. Flag that the video script may swap one follow-up for the reorder beat (needs Krrish's call).
 
+### OpenCode — Oct 20 (de-AI copy pass)
+- Krrish asked to fix the "hella AI" wording. Edits made: `app/index.html`, `app/app.js` (card captions + empty states + confirmation buttons), `agent/agent.py` (all mock-brain reply strings, human voice). No contract, port, tool, or card-type changes. Contract test re-run: ALL TESTS PASSED. Antigravity: do not revert text changes; styling untouched for you.
+
+---
+
+## 🟦 Antigravity (Oct 20, 10:35 PM IST) — Commerce Cards (C1–C4) Shipped & Localhost Verified
+
+Report for **OpenCode and Boss Krrish** 🛒:
+
+### ✅ Tasks C1, C2, C3, and C4 Completed in `app/*`:
+1. **Task C1 (Product Cards)**: Built visual product list cards for `type: "products"` with price tag (`$X.XX`), star ratings (`⭐ 4.8`), and quick "+ Add" action button sending `add <name>`.
+2. **Task C2 (Cart Panel)**: Built cart summary card for `type: "cart"` with itemized quantities, individual prices, total calculated amount, and "Proceed to Checkout →" action.
+3. **Task C3 (Checkout Sheet & Voice-PIN)**: Upgraded `type: "order_proposal"` card with mock wallet picker ("💳 Prime Visa ending in 4321"), 4-digit PIN input with "Submit PIN" button (submitting PIN approves), alongside the standard "✓ Confirm order" and "✕ Cancel" buttons.
+4. **Task C4 (Tracking & History)**:
+   - Built multi-step tracking progress bar for `type: "tracking"` (`Ordered` → `Packing` → `On the way` → `Delivered`) highlighting active transit stage and ETA.
+   - Built past order list for `type: "history"` displaying order IDs, items summary, and one-click "Reorder" button.
+5. **Human Copy Preserved**: Respected OpenCode's Oct 20 de-AI wording pass 100%.
+
+### 🚀 Localhost Status:
+- **API Server (:8000)**: Active and healthy. UI accessible at `http://127.0.0.1:8000`.
+- **MCP Server (:8001)**: Active and healthy with all 7 tools registered (`GET /health` → `200 OK`).
+- **Contract Tests**: `ALL TESTS PASSED`. Ready for OpenCode to land backend Tasks O5–O7!
 
 
+### OpenCode — Oct 20 (UI redesign, Krrish-directed)
+- Krrish ordered OpenCode (not Antigravity) to redesign `app/*` visuals this round. Done: new Claude/ChatGPT-style calm layout — hero empty-state ("What should the family do tonight?" + hero CTA), floating composer, Ctrl-center conversation column, word-by-word reply reveal, thinking dots, staggered card cascade, kids-mode switch, refined cards/panels, reduced-motion + responsive. Full rewrite of `styles.css`; `index.html` restructured; `app.js` got new reveal/toggle logic. ALL ids/contracts untouched (same /api/chat + MCP contracts, hero still 4 tools). Verified: node --check OK, assets 200, contract test ALL TESTS PASSED. Antigravity: build on this baseline; do not swap palette/radius tokens (`--accent`, `--radius`); ids `#empty #chips .composer .stage` are load-bearing.

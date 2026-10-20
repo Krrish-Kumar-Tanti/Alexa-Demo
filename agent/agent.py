@@ -201,11 +201,11 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
         _PENDING_PROPOSAL = None
         if res.get("ok") and res.get("status") == "executed":
             order = res["order"]
-            text = "Confirmed! Order %s is placed (%s). Arriving by %s." % (
+            text = "Done — order %s is placed. %s. It reaches home by %s." % (
                 order.get("order_id"), ", ".join(order.get("items", [])), order.get("eta"))
             cards = [{"type": "order", "title": "Order %s" % order.get("order_id", ""), "detail": order}]
         else:
-            text = "That confirmation didn't go through (%s). Tell me what to order and I'll stage it again." % res.get("error", "unknown")
+            text = "That didn't go through (%s). Tell me the order again and I'll set it up one more time." % res.get("error", "unknown")
         return _finish(user_text, text, cards, tools_used)
     if any(k in t for k in ["cancel", "decline", "never mind", "don't order", "dont order"]) and _PENDING_PROPOSAL:
         tool_confirm_order(_PENDING_PROPOSAL, False); tools_used.append("confirm_order:decline")
@@ -218,12 +218,11 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
         tv = tool_tv_control("launch", app="Movies"); tools_used.append("tv_control:launch Movies")
         door = tool_door_status(); tools_used.append("door_status")
         order = tool_order_groceries(["popcorn", "juice"]); tools_used.append("order_groceries")
-        kids_note = "Kids mode ON - only U/A content." if profile.get("kids_mode") else ""
+        kids_note = "Kids mode is on, so only U/A shows. " if profile.get("kids_mode") else ""
         text = (
-            "Movie night ready! I checked your calendar - you're free after 7:30pm. "
-            "Living-room TV is opening movie picks. %s Front door: %s. "
-            "Popcorn + juice ordered (%s, arrives ~%s)."
-            % (kids_note, door.get("last_event", ""), order.get("order_id", ""), order.get("eta", ""))
+            "Movie night's set. You're free after 7:30, so movie picks are up on the living-room TV. %s"
+            "Front door: %s. Popcorn and juice are ordered — they'll be home by %s."
+            % (kids_note, door.get("last_event", ""), order.get("eta", ""))
         )
         # Try to upgrade wording with Bedrock if enabled (with memory context)
         ai = try_bedrock_reply(user_text, (memory_context() + "\n" + text).strip())
@@ -239,7 +238,7 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
 
     if any(k in t for k in ["door", "ring", "package", "delivery", "who is"]):
         door = tool_door_status(); tools_used.append("door_status")
-        text = "Front door update: %s at %s. No motion right now. Want me to show the snapshot on TV?" % (
+        text = "Front door: %s at %s, and it's quiet right now. Want the snapshot up on the TV?" % (
             door.get("last_event", "no events"), door.get("time", ""))
         cards = [{"type": "door", "title": "Front Door", "detail": door}]
         return _finish(user_text, text, cards, tools_used)
@@ -247,8 +246,8 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
     if any(k in t for k in ["order", "popcorn", "groceries", "buy", "snack"]):
         prop = tool_propose_order(["popcorn", "samosa"]); tools_used.append("propose_order")
         _PENDING_PROPOSAL = prop.get("proposal_id")
-        text = ("I've staged popcorn + samosa for home delivery. Reply 'confirm' to place the order, "
-                "or 'cancel' to drop it — nothing is ordered until you approve.")
+        text = ("Popcorn and samosa are ready for home delivery. Say 'confirm' to place the order, "
+                "or 'cancel' to drop it. Nothing's ordered until you say so.")
         cards = [{"type": "order_proposal", "title": "Confirm your order", "detail": prop}]
         return _finish(user_text, text, cards, tools_used)
 
@@ -256,7 +255,7 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
         day = "tomorrow" if "tomorrow" in t else "today"
         cal = tool_get_calendar(day); tools_used.append("get_calendar")
         evts = ", ".join(["%s at %s" % (e["title"], e["start"]) for e in cal.get("events", [])])
-        text = "%s: %s. You are free after 7:30pm - perfect for movie night." % (day.capitalize(), evts)
+        text = "%s's plan: %s. You're free after 7:30pm — that's your movie-night window." % (day.capitalize(), evts)
         cards = [{"type": "calendar", "title": "Today", "detail": cal}]
         return _finish(user_text, text, cards, tools_used)
 
@@ -264,8 +263,8 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
         remind = tool_remind_grandma(); tools_used.append("remind_grandma")
         cal = tool_get_calendar("tomorrow"); tools_used.append("get_calendar")
         text = (
-            "Done! I sent Grandma a check-in message: \"%s\". "
-            "Video call scheduled for %s. I also pulled tomorrow's calendar so you don't double-book."
+            "Done. Grandma got a check-in from you: \"%s\". "
+            "Video call set for %s — and I pulled tomorrow's calendar so nothing clashes."
             % (remind.get("message", ""), remind.get("call_scheduled", ""))
         )
         ai = try_bedrock_reply(user_text, (memory_context() + "\n" + text).strip())
@@ -279,30 +278,30 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
 
     if any(k in t for k in ["tv", "watch", "play", "kids", "prime", "cricket", "movie"]):
         tv = tool_tv_control("status"); tools_used.append("tv_control:status")
-        text = "Living-room TV is on (%s). Kids mode is %s. Say 'movie night' and I'll set up everything." % (
-            tv.get("tv", {}).get("app", ""), "ON" if tv.get("tv", {}).get("kids_mode") else "OFF")
+        text = "The living-room TV is on %s and kids mode is %s. Say 'movie night' and I'll handle the rest." % (
+            tv.get("tv", {}).get("app", ""), "on" if tv.get("tv", {}).get("kids_mode") else "off")
         cards = [{"type": "tv", "title": "TV status", "detail": tv.get("tv", {})}]
         return _finish(user_text, text, cards, tools_used)
 
     if any(k in t for k in ["who am i", "my name", "do you know me", "who are you"]):
         name = str(profile.get("name", "Family"))
         if "who are you" in t and "who am i" not in t:
-            text = ("I'm Family Captain, your Alexa+ helper. I run movie nights, front-door checks, "
-                    "calendar lookups, snack orders and Grandma check-ins — just ask.")
+            text = ("I'm Family Captain — your Alexa+ helper for movie nights, front-door checks, "
+                    "calendar, snack orders and checking in on Grandma.")
         else:
             past = load_memory()
             if past:
                 last = past[-1].get("user", "something")
-                text = ("You're %s — we've chatted %d times, most recently about '%s'. "
-                        "I keep our history so you never repeat yourself." % (name, len(past), last))
+                text = ("You're %s. We've talked %d times — the last one was about '%s'. "
+                        "I remember, so you don't have to repeat yourself." % (name, len(past), last))
             else:
-                text = ("You're %s! We haven't chatted yet — try 'movie night with kids' and I'll remember "
-                        "everything from there." % name)
+                text = ("You're %s! We haven't talked yet — try 'movie night with kids' and I'll "
+                        "remember it from there." % name)
         return _finish(user_text, text, [], tools_used)
 
     if any(k in t for k in ["what can you", "help", "what do you do", "abilities", "commands"]):
-        text = ("I can: set up movie night, check the front door, read your calendar, order snacks "
-                "(I always ask before ordering), and check in on Grandma. I remember our chats. "
+        text = ("I can set up movie night, check the front door, read your calendar, order snacks "
+                "(always asking first), and check in on Grandma. I remember our chats. "
                 "Try 'movie night with kids'.")
         return _finish(user_text, text, [], tools_used)
 
@@ -310,8 +309,8 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
     past_memory = load_memory()
     n = max(len(history), len(past_memory))
     text = (
-        "I'm your Family Captain. I can do movie night setup, front-door check, calendar, or orders - "
-        "all in one go. (We've chatted %d times, I remember context.) Try: 'movie night with kids'." % n
+        "I'm your Family Captain — movie night, front door, calendar, snacks, all in one go. "
+        "We've talked %d times so far and I remember. Try 'movie night with kids'." % n
     )
     ai = try_bedrock_reply(user_text, (memory_context() + "\n" + text).strip())
     if ai:
