@@ -7,11 +7,16 @@ const emptyEl = document.getElementById("empty");
 const onboardEl = document.getElementById("onboard");
 
 let history = [];
-let PROFILE = { name: "Family", lang: "en" };
+let PROFILE = { name: "Family", lang: "en", land: "" };
 try {
   const saved = JSON.parse(localStorage.getItem("fc_profile") || "{}");
   if (saved.name) PROFILE.name = String(saved.name);
   if (saved.lang) PROFILE.lang = String(saved.lang);
+  if (saved.land) PROFILE.land = String(saved.land);
+  if (saved.agegroup) PROFILE.agegroup = String(saved.agegroup);
+  if (saved.gender) PROFILE.gender = String(saved.gender);
+  if (typeof saved.kids_home === "boolean") PROFILE.kids_home = saved.kids_home;
+  if (typeof saved.grandparents_home === "boolean") PROFILE.grandparents_home = saved.grandparents_home;
 } catch(e) {}
 
 const VOICES = {
@@ -22,6 +27,12 @@ const VOICES = {
 function ttsLang(){ return (VOICES[PROFILE.lang] || VOICES.en)[1]; }
 function ttsVoice(){ return (VOICES[PROFILE.lang] || VOICES.en)[0]; }
 
+const OB_GREET = {
+  en: "%s! Ready when you are — I already remember this.",
+  hi: "%s! Aapke liye taiyaar hoon — sab yaad hai mujhe.",
+  ja: "%sさん!いつでも準備OK — もう覚えています。",
+};
+
 const I18N = {
   en: {
     obTitle: "Let's get to know you",
@@ -30,6 +41,12 @@ const I18N = {
     obLangQ: "Alexa ki zubaan — ことばをえらんでね",
     obDone: "Let's go →",
     obCustomPh: "Type a name…",
+    obAgeQ: "A little about you — optional, skip anytime",
+    obHomeQ: "Who's at home?",
+    obHomeNote: "Kids keep speech kid-safe. Grandparents get gentle check-ins.",
+    obNext: "Next →",
+    obSkipTxt: "skip — keep it simple",
+    obBackTxt: "← back",
     heroTitle: "What should the family do tonight?",
     heroReady: "Ready when you are, %s.",
     heroSub: "One ask — I line up the calendar, the living-room TV, the front door and snacks. Every tool call below runs on a real MCP server.",
@@ -99,6 +116,12 @@ const I18N = {
     obLangQ: "Alexa ki zubaan — ことばをえらんでね",
     obDone: "Chalo shuru karein →",
     obCustomPh: "Naam likhiye…",
+    obAgeQ: "Thoda apne baare mein — optional, kabhi skip",
+    obHomeQ: "Ghar par kaun-kaun hai?",
+    obHomeNote: "Bachchon ki awaaz kid-safe. Dadi-Nani ko halki check-ins.",
+    obNext: "Aage →",
+    obSkipTxt: "skip — seedha rakho",
+    obBackTxt: "← peeche",
     heroTitle: "Aaj family raat mein kare kya?",
     heroReady: "Aapke liye taiyaar hoon, %s.",
     heroSub: "Ek baat boliye — calendar, TV, darwaza aur snacks main sambhal lunga. Har tool call neeche real MCP server par chal rahi hai.",
@@ -168,6 +191,12 @@ const I18N = {
     obLangQ: "ことばをえらんでね",
     obDone: "はじめよう →",
     obCustomPh: "なまえを入れてね…",
+    obAgeQ: "ちょっとだけ教えてね — やめてもOK",
+    obHomeQ: "おうちには誰がいる？",
+    obHomeNote: "子どもにはkid-safeな言葉。おばあちゃんにはやさしいcheck-in。",
+    obNext: "つぎへ →",
+    obSkipTxt: "スキップ — シンプルに",
+    obBackTxt: "← もどる",
     heroTitle: "今夜、家族で何をする？",
     heroReady: "いつでも準備OK、%sさん。",
     heroSub: "ひと言で — カレンダー、リビングのTV、玄関、おやつをぜんぶおまかせ。下のtool callはぜんぶ本物のMCPサーバーで動いています。",
@@ -319,6 +348,12 @@ function buildChips(){
   const cfg = t08n();
   chipsEl.innerHTML = cfg.chips
     .map(c=>'<button data-q="'+escapeHtml(c[0])+'">'+c[1]+"</button>").join("");
+  if(PROFILE.grandparents_home){
+    chipsEl.querySelectorAll("[data-q]").forEach(b=>{
+      const q = (b.dataset.q || "").toLowerCase();
+      if(q.includes("grandma") || q.includes("dadi") || q.includes("おばあちゃん")) b.classList.add("hot");
+    });
+  }
   const heroChips = document.getElementById("hero-chips");
   if(heroChips){
     heroChips.innerHTML = cfg.heroChips
@@ -338,6 +373,18 @@ function applyLang(lang){
   set("ob-name-q", cfg.obNameQ);
   set("ob-lang-q", cfg.obLangQ);
   set("ob-done", cfg.obDone);
+  set("ob-age-q", cfg.obAgeQ);
+  set("ob-home-q", cfg.obHomeQ);
+  set("ob-home-note", cfg.obHomeNote);
+  set("ob-n1", cfg.obNext);
+  set("ob-n2", cfg.obNext);
+  set("ob-n3", cfg.obNext);
+  set("ob-skip2", cfg.obSkipTxt);
+  set("ob-back", cfg.obBackTxt);
+  const AGE_LABELS = { en: ["Kid","Teen","Adult","60+"], hi: ["Bacha","Teen","Adult","60+"], ja: ["子ども","10代","おとな","60+"] };
+  const HOME_LABELS = { en: ["🧒 Kids","👵 Grandparents"], hi: ["🧒 Bachche","👵 Dadi-Nani"], ja: ["🧒 子ども","👵 ばあば"] };
+  document.querySelectorAll("#ob-ages [data-age]").forEach(b=>{ b.textContent = AGE_LABELS[lang][["kid","teen","adult","60s"].indexOf(b.dataset.age)]; });
+  document.querySelectorAll("#ob-homes [data-home]").forEach(b=>{ b.textContent = HOME_LABELS[lang][b.dataset.home === "kids" ? 0 : 1]; });
   const obCustom = document.getElementById("ob-name-input");
   if(obCustom) obCustom.placeholder = cfg.obCustomPh;
   set("hero-title", heroTitleText());
@@ -358,6 +405,7 @@ function applyLang(lang){
   document.querySelectorAll("#ob-langs button").forEach(b=>{
     b.classList.toggle("sel", b.dataset.oblang === lang);
   });
+  updateObPreview();
   buildChips();
 }
 
@@ -794,17 +842,100 @@ async function send(text, fromQueue){
   }
 }
 
-// ── Onboarding ──
+// ── Onboarding (4-step) + landing ──
 let obName = "Krrish";
 let obLang = PROFILE.lang;
+let obStep = 1;
 
-document.getElementById("ob-done").onclick = ()=>{
+const OB_DEFAULTS = {
+  agegroup: PROFILE.agegroup || "",
+  gender: PROFILE.gender || "",
+  kids_home: PROFILE.kids_home !== undefined ? PROFILE.kids_home : true,
+  grandparents_home: PROFILE.grandparents_home !== undefined ? PROFILE.grandparents_home : false,
+};
+
+function obSel(containerId, attrKey, val){
+  document.querySelectorAll("#"+containerId+" button").forEach(b=>b.classList.toggle("sel", val && b.getAttribute(attrKey) === val));
+}
+
+function updateObPreview(){
+  const el = document.getElementById("ob-preview");
+  if(!el) return;
+  const who = obName || "Family";
+  el.textContent = (OB_GREET[obLang] || OB_GREET.en).replace("%s", who);
+}
+
+function obShow(n){
+  obStep = n;
+  document.querySelectorAll(".ob-step").forEach(s=>{
+    s.hidden = Number(s.dataset.step) !== n;
+  });
+  document.querySelectorAll("#ob-dots i").forEach((d,i)=>d.classList.toggle("on", i < n));
+  const back = document.getElementById("ob-back");
+  if(back) back.hidden = n === 1;
+  if(n === 4) updateObPreview();
+}
+
+function enterApp(){
+  document.body.classList.remove("show-landing");
+  onboardEl.hidden = false;
+  obBackfill();
+  obShow(1);
+}
+
+function enterAppDirect(){
+  document.body.classList.remove("show-landing");
+  onboardEl.hidden = true;
+}
+
+function obBackfill(){
+  obName = (PROFILE.land && PROFILE.name && PROFILE.name !== "Family") ? PROFILE.name : "Krrish";
+  document.querySelectorAll("#ob-names button").forEach(b=>b.classList.toggle("sel", b.dataset.name === obName));
+  const custom = document.getElementById("ob-name-input");
+  if(custom){ custom.value = obName; if(![...document.querySelectorAll("#ob-names button")].some(b=>b.classList.contains("sel"))){ custom.hidden = false; } else custom.hidden = true; }
+  obSel("ob-ages", "data-age", OB_DEFAULTS.agegroup);
+  obSel("ob-gends", "data-gender", OB_DEFAULTS.gender);
+  obSel("ob-homes", "data-home", OB_DEFAULTS.kids_home ? "kids" : "");
+  document.querySelector('#ob-homes [data-home="grandma"]').classList.toggle("sel", OB_DEFAULTS.grandparents_home);
+  obLang = PROFILE.lang || "en";
+}
+
+function finishOnboarding(){
   const custom = document.getElementById("ob-name-input");
   if(custom && custom.value.trim() && !custom.hidden) obName = custom.value.trim();
   PROFILE.name = obName || "Family";
+  PROFILE.land = "saved";
+  PROFILE.agegroup = OB_DEFAULTS.agegroup;
+  PROFILE.gender = OB_DEFAULTS.gender;
+  PROFILE.kids_home = OB_DEFAULTS.kids_home;
+  PROFILE.grandparents_home = OB_DEFAULTS.grandparents_home;
   saveProfile();
+  document.body.classList.remove("show-landing");
   onboardEl.hidden = true;
+  const kids = document.getElementById("kids");
+  if(kids) kids.checked = PROFILE.kids_home ? true : kids.checked;
   applyLang(obLang || "en");
+}
+
+document.getElementById("land-cta").onclick = enterApp;
+document.getElementById("land-skip").onclick = ()=>{
+  PROFILE.land = "skip";
+  saveProfile();
+  enterAppDirect();
+  applyLang(PROFILE.lang || "en");
+};
+
+document.getElementById("ob-done").onclick = finishOnboarding;
+document.getElementById("ob-back").onclick = ()=>{ obShow(obStep > 1 ? obStep - 1 : 1); };
+document.getElementById("ob-n1").onclick = ()=>obShow(2);
+document.getElementById("ob-n2").onclick = ()=>obShow(3);
+document.getElementById("ob-n3").onclick = ()=>obShow(4);
+document.getElementById("ob-skip2").onclick = ()=>{
+  OB_DEFAULTS.agegroup = "";
+  OB_DEFAULTS.gender = "";
+  obSel("ob-ages", "data-age", "");
+  obSel("ob-gends", "data-gender", "");
+  obShow(3);
 };
 
 // Suggestion chips + hero CTAs (event delegation survives rebuilds)
@@ -817,6 +948,7 @@ document.addEventListener("click", (e)=>{
   if(obLangBtn){
     obLang = obLangBtn.dataset.oblang;
     document.querySelectorAll("#ob-langs button").forEach(b=>b.classList.toggle("sel", b===obLangBtn));
+    updateObPreview();
     return;
   }
   const nameBtn = e.target.closest("#ob-names button");
@@ -833,9 +965,30 @@ document.addEventListener("click", (e)=>{
     }
     return;
   }
+  const ageBtn = e.target.closest("#ob-ages button");
+  if(ageBtn){
+    OB_DEFAULTS.agegroup = ageBtn.dataset.age;
+    obSel("ob-ages", "data-age", OB_DEFAULTS.agegroup);
+    return;
+  }
+  const gBtn = e.target.closest("#ob-gends button");
+  if(gBtn){
+    OB_DEFAULTS.gender = gBtn.dataset.gender;
+    obSel("ob-gends", "data-gender", OB_DEFAULTS.gender);
+    return;
+  }
+  const hBtn = e.target.closest("#ob-homes button");
+  if(hBtn){
+    const key = hBtn.dataset.home === "kids" ? "kids_home" : "grandparents_home";
+    OB_DEFAULTS[key] = !OB_DEFAULTS[key];
+    hBtn.classList.toggle("sel", OB_DEFAULTS[key]);
+    return;
+  }
 });
 
 document.getElementById("edit-profile").onclick = ()=>{
+  obBackfill();
+  obShow(1);
   onboardEl.hidden = false;
 };
 
@@ -868,18 +1021,18 @@ box.addEventListener("keydown",e=>{if(e.key==="Enter")send();});
 box.addEventListener("input",updateTypeHint);
 updateTypeHint();
 
-// Initial load: persisted memory count decides onboarding vs hero
+// Initial load: first visit → landing; returning → straight into the app.
+// Landing is the only entry point to the stepper; the app never force-opens it.
+if(!PROFILE.land){
+  document.body.classList.add("show-landing");
+} else {
+  enterAppDirect();
+}
 fetch("/api/memory")
   .then(r=>r.json())
   .then(d=>{
     if(d && typeof d.total_chats === "number") updateChatCount(d.total_chats);
     applyLang(PROFILE.lang);
-    const fresh = !d || typeof d.total_chats !== "number" || d.total_chats === 0;
-    if(fresh){
-      onboardEl.hidden = false;
-    } else {
-      applyLang(PROFILE.lang);  // personalize hero with stored name
-    }
   })
   .catch(()=>{
     applyLang(PROFILE.lang);

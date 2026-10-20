@@ -8,6 +8,25 @@
 </head>
 <body>
 <div class="bg"></div>
+
+<div id="landing">
+  <div class="land-card">
+    <span class="ring big"></span>
+    <div class="land-eyebrow">alexa+ family captain · simulated experience</div>
+    <h1>One sentence, and the evening sets itself up.</h1>
+    <p>Calendar, living-room TV, front door, snacks, Grandma — Alexa+ orchestrates them all through <b>11 real MCP tools</b>, remembers your family, and never orders a thing without your confirm.</p>
+    <div class="land-ctas">
+      <button class="hero-cta" id="land-cta">Tell me about yourself →</button>
+      <button class="land-skip" id="land-skip">just show me the app</button>
+    </div>
+  </div>
+  <div class="land-marquee"><div class="land-track">
+    <span>11 MCP tools</span><span>MCP 2025-11-25 Streamable HTTP</span><span>EN / हिन्दी / 日本語</span><span>Polly neural voices</span><span>nothing ordered without confirm</span><span>audit ledger on disk</span><span>memory that persists</span>
+    <span>11 MCP tools</span><span>MCP 2025-11-25 Streamable HTTP</span><span>EN / हिन्दी / 日本語</span><span>Polly neural voices</span><span>nothing ordered without confirm</span><span>audit ledger on disk</span><span>memory that persists</span>
+  </div></div>
+  <div class="land-footer">Simulated Alexa+ experience · built for the Amazon Developer Hackathon</div>
+</div>
+
 <header class="topbar">
   <div class="logo"> <span class="ring"></span> alexa+ <em>family captain</em></div>
   <div class="badges">
@@ -28,24 +47,58 @@
 
         <div id="onboard" class="onboard" hidden>
           <span class="ring"></span>
-          <h1 id="ob-title">Let's get to know you</h1>
-          <p id="ob-sub">Ten seconds — then my memory is yours.</p>
-          <div class="onboard-q" id="ob-name-q">What should I call you?</div>
-          <div class="onboard-chips" id="ob-names">
-            <button data-name="Krrish" class="sel">Krrish</button>
-            <button data-name="Dad">Dad</button>
-            <button data-name="Mom">Mom</button>
-            <button data-name="Grandma">Grandma</button>
-            <button data-name="__custom" id="ob-custom-btn">✎ type</button>
+          <div class="ob-dots" id="ob-dots"><i class="on"></i><i></i><i></i><i></i></div>
+          <div class="ob-step" data-step="1">
+            <h1 id="ob-title">Let's get to know you</h1>
+            <p id="ob-sub">Ten seconds — then my memory is yours.</p>
+            <div class="onboard-q" id="ob-name-q">What should I call you?</div>
+            <div class="onboard-chips" id="ob-names">
+              <button data-name="Krrish" class="sel">Krrish</button>
+              <button data-name="Dad">Dad</button>
+              <button data-name="Mom">Mom</button>
+              <button data-name="Grandma">Grandma</button>
+              <button data-name="__custom" id="ob-custom-btn">✎ type</button>
+            </div>
+            <input id="ob-name-input" class="ob-custom" placeholder="Type a name…" autocomplete="off" hidden />
+            <button class="hero-cta" id="ob-n1">Next →</button>
           </div>
-          <input id="ob-name-input" class="ob-custom" placeholder="Type a name…" autocomplete="off" hidden />
-          <div class="onboard-q" id="ob-lang-q">Alexa ki zubaan — ことばをえらんでね</div>
-          <div class="onboard-chips" id="ob-langs">
-            <button data-oblang="en" class="sel">English</button>
-            <button data-oblang="hi">हिन्दी</button>
-            <button data-oblang="ja">日本語</button>
+          <div class="ob-step" data-step="2" hidden>
+            <div class="onboard-q" id="ob-age-q">A little about you — optional</div>
+            <div class="onboard-chips" id="ob-ages">
+              <button data-age="kid">Kid</button>
+              <button data-age="teen">Teen</button>
+              <button data-age="adult">Adult</button>
+              <button data-age="60s">60+</button>
+            </div>
+            <div class="onboard-q" id="ob-gender-q">How should I greet you?</div>
+            <div class="onboard-chips" id="ob-gends">
+              <button data-gender="she">She/Her</button>
+              <button data-gender="he">He/Him</button>
+              <button data-gender="they">They/Them</button>
+            </div>
+            <button class="hero-cta" id="ob-n2">Next →</button>
+            <button class="ob-skip" id="ob-skip2">skip — keep it simple</button>
           </div>
-          <button class="hero-cta" id="ob-done">Let's go →</button>
+          <div class="ob-step" data-step="3" hidden>
+            <div class="onboard-q" id="ob-home-q">Who's at home?</div>
+            <div class="onboard-chips" id="ob-homes">
+              <button data-home="kids" class="sel">🧒 Kids</button>
+              <button data-home="grandma">👵 Grandparents</button>
+            </div>
+            <p class="ob-note" id="ob-home-note">Kids keep speech kid-safe. Grandparents get gentle check-ins.</p>
+            <button class="hero-cta" id="ob-n3">Next →</button>
+          </div>
+          <div class="ob-step" data-step="4" hidden>
+            <div class="onboard-q" id="ob-lang-q">Alexa ki zubaan — ことばをえらんでね</div>
+            <div class="onboard-chips" id="ob-langs">
+              <button data-oblang="en" class="sel">English</button>
+              <button data-oblang="hi">हिन्दी</button>
+              <button data-oblang="ja">日本語</button>
+            </div>
+            <div class="ob-preview" id="ob-preview"></div>
+            <button class="hero-cta" id="ob-done">Let's go →</button>
+          </div>
+          <button class="ob-back" id="ob-back" hidden>← back</button>
         </div>
 
         <div id="empty" class="hero" hidden>
