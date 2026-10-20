@@ -40,7 +40,9 @@
     <span class="pill" id="memory-pill">💾 <span id="memory-count">0 chats</span></span>
     <span class="pill">SIMULATED ALEXA+ EXPERIENCE</span>
     <span class="pill dim">MCP 2025-11-25 • Streamable HTTP</span>
+    <span class="pill user-badge" id="user-profile-badge" title="Active user profile"><span class="user-avatar">👤</span> <strong id="user-display-name">Krrish</strong> <span id="user-display-details" class="user-sub"></span></span>
     <button class="pill linklike" id="edit-profile" title="Edit profile">✏️ profile</button>
+    <button class="pill linklike logout-btn" id="logout-btn" title="Log out and return to landing page">🚪 log out</button>
   </div>
 </header>
 
@@ -53,6 +55,7 @@
         <div id="chat" class="chat"></div>
 
         <div id="onboard" class="onboard" hidden>
+          <button class="ob-close" id="ob-close" title="Close" aria-label="Close">✕</button>
           <span class="ring"></span>
           <div class="ob-dots" id="ob-dots"><i class="on"></i><i></i><i></i><i></i></div>
           <div class="ob-step" data-step="1">

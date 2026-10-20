@@ -332,6 +332,7 @@ function typeInto(el, text, dur){
 
 function saveProfile(){
   try{ localStorage.setItem("fc_profile", JSON.stringify(PROFILE)); }catch(e){}
+  updateUserHeader();
 }
 
 function heroTitleText(){
@@ -876,6 +877,28 @@ function obShow(n){
   if(n === 4) updateObPreview();
 }
 
+function updateUserHeader(){
+  const badge = document.getElementById("user-profile-badge");
+  const nameEl = document.getElementById("user-display-name");
+  const detailsEl = document.getElementById("user-display-details");
+  const logoutBtn = document.getElementById("logout-btn");
+
+  const hasName = PROFILE.name && PROFILE.name !== "Family";
+  const isConfigured = !!(PROFILE.land && hasName);
+  const userName = isConfigured ? PROFILE.name : (hasName ? PROFILE.name : "Family");
+
+  if(nameEl) nameEl.textContent = userName;
+  if(detailsEl){
+    const bits = [];
+    if(PROFILE.agegroup) bits.push(PROFILE.agegroup);
+    if(PROFILE.kids_home) bits.push("🛡️ kids");
+    if(PROFILE.lang && PROFILE.lang !== "en") bits.push(PROFILE.lang.toUpperCase());
+    detailsEl.textContent = bits.length ? `• ${bits.join(" · ")}` : "";
+  }
+  if(badge) badge.hidden = !isConfigured;
+  if(logoutBtn) logoutBtn.hidden = !isConfigured;
+}
+
 function showLanding(){
   document.body.classList.add("show-landing");
   if(onboardEl) onboardEl.hidden = true;
@@ -901,6 +924,7 @@ function enterAppDirect(){
   document.body.classList.remove("show-landing");
   if(onboardEl) onboardEl.hidden = true;
   updateLandingButtons();
+  updateUserHeader();
 }
 
 function obBackfill(){
@@ -930,6 +954,7 @@ function finishOnboarding(){
   const kids = document.getElementById("kids");
   if(kids) kids.checked = PROFILE.kids_home ? true : kids.checked;
   updateLandingButtons();
+  updateUserHeader();
   applyLang(obLang || "en");
 }
 
@@ -952,6 +977,31 @@ if(landLogo) landLogo.onclick = enterAppDirect;
 
 const landNavApp = document.getElementById("land-nav-app");
 if(landNavApp) landNavApp.onclick = enterAppDirect;
+
+const obClose = document.getElementById("ob-close");
+if(obClose){
+  obClose.onclick = ()=>{
+    if(onboardEl) onboardEl.hidden = true;
+    enterAppDirect();
+  };
+}
+
+const logoutBtn = document.getElementById("logout-btn");
+if(logoutBtn){
+  logoutBtn.onclick = ()=>{
+    localStorage.removeItem("fc_profile");
+    PROFILE = { name: "Family", lang: "en", land: "" };
+    OB_DEFAULTS.agegroup = "";
+    OB_DEFAULTS.gender = "";
+    OB_DEFAULTS.kids_home = true;
+    OB_DEFAULTS.grandparents_home = false;
+    obName = "Krrish";
+    obLang = "en";
+    updateUserHeader();
+    showLanding();
+    applyLang("en");
+  };
+}
 
 [navBrand, navLanding].forEach(el=>{
   if(el) el.addEventListener("keydown", e=>{ if(e.key==="Enter" || e.key===" ") { e.preventDefault(); showLanding(); } });
@@ -1061,6 +1111,7 @@ updateTypeHint();
 if(!PROFILE.land){
   document.body.classList.add("show-landing");
   updateLandingButtons();
+  updateUserHeader();
 } else {
   enterAppDirect();
 }
