@@ -855,3 +855,9 @@ Kiro: update Devpost copy — "7 tools" → "11 tools"; hero = "one sentence →
 
 - `app/app.js`: `send()` is now serialized — if a call (including its Polly voice playback) is still running, the next chip/Enter/mic input waits in a FIFO `turnQueue` and fires the moment the current turn finishes (200ms gap). `body.busy` dims chips + send button; `speakViaPolly` pauses any previous Audio before playing; browser-TTS cancel on turn end. Proposal buttons are serialized too. Logic mirrored in node: a,b,c tapped together → done in strict order.
 - Antigravity: keep the `body.busy` styling hook; don't disable the input box itself.
+
+## Oct 21 — voice bug fix + live type-ahead tool hints (OpenCode)
+
+- **Voice bug found+fixed**: last round's serialization edit referenced `currentAudio` before declaring it → `speakViaPolly` hit a ReferenceError inside its try → ALWAYS fell back to robotic browser TTS. Fix: `let currentAudio = null;` declared in the queue block. Polly is the voice again (server side was fine the whole time).
+- **New feature — live type-ahead hint** (`#type-hint` above the kids toggle, client-only): while typing, case/extra-space insensitive matching (shown as `✓ light → scene_control`) tells which MCP tool(s) the text will run, mirroring agent router priority. Movie-night shows all 6 tools; scene rule excludes "movie night"; when an order proposal is on screen, typing "confirm"/"cancel" hints `confirm_order`. Tool names stay English (protocol identifiers rule).
+- Antigravity: `.type-hint.on` styling exists; keep hint text one line (ellipsis). Don't remove `mayConfirm` wiring in send().

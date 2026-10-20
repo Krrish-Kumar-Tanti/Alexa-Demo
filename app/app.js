@@ -233,6 +233,43 @@ const I18N = {
 };
 function t08n(){ return I18N[PROFILE.lang] || I18N.en; }
 
+// Live "what will Alexa run" detection while typing (mirrors agent/agent.py router order).
+// Normalization: lowercase + collapse extra spaces, so case/spacing never break matching.
+let mayConfirm = false;
+const HINT_RULES = [
+  { keys: ["movie night","film","filmy","eiga","映画","ムービー","मूवी","फिल्म","movie ka","movie plan"], hint: "🎬 → <b>get_calendar</b> <b>tv_control</b> <b>door_status</b> <b>order_groceries</b> <b>scene_control</b> <b>get_weather</b>" },
+  { keys: ["scene","dim","lights","mood","sajao","ライト","あかり","照明"], hint: "💡 → <b>scene_control</b>", skipMovie: true },
+  { keys: ["homework","padhai","study","宿題","しゅくだい","benkyou"], hint: "📚 → <b>check_homework</b>" },
+  { keys: ["weather","rain","baarish","barish","mausam","tenki","天気","てんき","あめ","雨"], hint: "🌦️ → <b>get_weather</b>" },
+  { keys: ["shopping list","to list","list par","list mein","kharidari","リスト","りすと"], hint: "🛒 → <b>add_shopping_list</b>" },
+  { keys: ["door","ring","package","delivery","who is","darwaza","darwaze","दरवाज़ा","玄関","genkan"], hint: "🔔 → <b>door_status</b>" },
+  { keys: ["order","popcorn","groceries","buy","snack","samosa","khana","注文","ポップコーン","サモサ","食べ物","たべもの"], hint: "🛒 → <b>propose_order</b> · confirm_order" },
+  { keys: ["calendar","schedule","meeting","plan","free","tomorrow","today","tonight","kab hai","予定","カレンダー","karenda"], hint: "📅 → <b>get_calendar</b>" },
+  { keys: ["grandma","grandmother","nani","dadi","check in","remind","दादी","नानी","祖母","おばあちゃん","baat karao"], hint: "👵 → <b>remind_grandma</b> · get_calendar" },
+  { keys: ["tv","watch","play","kids","cricket","movie"], hint: "📺 → <b>tv_control</b>" },
+];
+const HINT_CONFIRM = ["confirm","place it","yes, order","yes order","confirm kar","haan order","ok order","確定","かくてい"];
+const HINT_CANCEL = ["cancel","decline","never mind","cancel karo","キャンセル"];
+
+function updateTypeHint(){
+  let el = document.getElementById("type-hint");
+  if(!el) return;
+  const t = (box.value || "").toLowerCase().replace(/\s+/g, " ").trim();
+  let html = "";
+  if(mayConfirm && HINT_CONFIRM.some(k=>t.includes(k))){
+    html = "🛒 → <b>confirm_order</b>";
+  } else if(mayConfirm && HINT_CANCEL.some(k=>t.includes(k))){
+    html = "✕ → <b>confirm_order</b> (decline)";
+  } else {
+    for(const r of HINT_RULES){
+      if(r.skipMovie && (t.includes("movie night") || t.includes("映画の夜"))) continue;
+      if(r.keys.some(k=>t.includes(k))){ html = "✓ " + r.hint; break; }
+    }
+  }
+  el.innerHTML = html;
+  el.classList.toggle("on", !!html);
+}
+
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 
 function bubble(who, text){
@@ -699,6 +736,7 @@ async function speakViaPolly(text){
 // One turn at a time: while a call is in flight the next ask waits in a FIFO
 // queue and runs the moment the current turn (speech included) is done.
 let busy = false;
+let currentAudio = null;
 const turnQueue = [];
 
 function runNextTurn(){
@@ -720,6 +758,7 @@ async function send(text, fromQueue){
   hideEmptyState();
   hideThinking();
   box.value="";
+  updateTypeHint();
   bubble("you", text);
   showThinking();
   try{
@@ -732,6 +771,11 @@ async function send(text, fromQueue){
     bubble("alexa", out.reply);
     renderCards(out.cards);
     renderTools(out.tools_used);
+    if(out.cards && out.cards.some(c=>c.type==="order_proposal")){
+      mayConfirm = true;
+    } else if((out.tools_used||[]).some(x=>String(x).startsWith("confirm_order"))){
+      mayConfirm = false;
+    }
     if(!(await speakViaPolly(out.reply))) speak(out.reply);
     fetchAuditLedger();
     if(typeof out.chat_count === "number"){
@@ -821,6 +865,8 @@ if(ttsBtn){
 
 document.getElementById("send").onclick=()=>send();
 box.addEventListener("keydown",e=>{if(e.key==="Enter")send();});
+box.addEventListener("input",updateTypeHint);
+updateTypeHint();
 
 // Initial load: persisted memory count decides onboarding vs hero
 fetch("/api/memory")
