@@ -58,7 +58,8 @@ body{
   background:rgba(10,14,20,.72);
   position:sticky;top:0;z-index:100;
 }
-.logo{font-size:18px;font-weight:700;letter-spacing:-.3px;display:flex;align-items:center;gap:10px}
+.logo{font-size:18px;font-weight:700;letter-spacing:-.3px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;transition:opacity .15s ease}
+.logo:hover{opacity:.85}
 .logo em{font-style:normal;font-weight:500;color:var(--ink-3);font-size:13px}
 .ring{
   width:12px;height:12px;border-radius:50%;
@@ -729,6 +730,7 @@ body.busy .mic.listening{animation:none}
 body.show-landing #landing{display:flex;flex-direction:column;position:fixed;inset:0;z-index:50;background:radial-gradient(1200px 600px at 50% -10%, rgba(102,217,242,.08), transparent 60%), var(--bg)}
 body.show-landing .topbar,
 body.show-landing .layout{visibility:hidden}
+.land-top-bar{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:1160px;margin:0 auto;padding:18px 24px 0;box-sizing:border-box}
 .land-card{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 20px 8px;max-width:760px;margin:0 auto}
 .land-eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
 #landing h1{margin:0 0 14px;font-size:clamp(28px,5vw,46px);line-height:1.12;color:var(--ink);font-weight:700;letter-spacing:-.02em}

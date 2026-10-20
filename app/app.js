@@ -876,16 +876,31 @@ function obShow(n){
   if(n === 4) updateObPreview();
 }
 
+function showLanding(){
+  document.body.classList.add("show-landing");
+  if(onboardEl) onboardEl.hidden = true;
+  updateLandingButtons();
+}
+
+function updateLandingButtons(){
+  const skipBtn = document.getElementById("land-skip");
+  const hasProfile = PROFILE.land && PROFILE.name && PROFILE.name !== "Family";
+  if(skipBtn){
+    skipBtn.textContent = hasProfile ? `Open App (${PROFILE.name}) →` : "just show me the app";
+  }
+}
+
 function enterApp(){
   document.body.classList.remove("show-landing");
-  onboardEl.hidden = false;
+  if(onboardEl) onboardEl.hidden = false;
   obBackfill();
   obShow(1);
 }
 
 function enterAppDirect(){
   document.body.classList.remove("show-landing");
-  onboardEl.hidden = true;
+  if(onboardEl) onboardEl.hidden = true;
+  updateLandingButtons();
 }
 
 function obBackfill(){
@@ -911,19 +926,39 @@ function finishOnboarding(){
   PROFILE.grandparents_home = OB_DEFAULTS.grandparents_home;
   saveProfile();
   document.body.classList.remove("show-landing");
-  onboardEl.hidden = true;
+  if(onboardEl) onboardEl.hidden = true;
   const kids = document.getElementById("kids");
   if(kids) kids.checked = PROFILE.kids_home ? true : kids.checked;
+  updateLandingButtons();
   applyLang(obLang || "en");
 }
 
 document.getElementById("land-cta").onclick = enterApp;
 document.getElementById("land-skip").onclick = ()=>{
-  PROFILE.land = "skip";
+  if(!PROFILE.land) PROFILE.land = "skip";
   saveProfile();
   enterAppDirect();
   applyLang(PROFILE.lang || "en");
 };
+
+const navBrand = document.getElementById("nav-brand");
+if(navBrand) navBrand.onclick = showLanding;
+
+const navLanding = document.getElementById("nav-landing");
+if(navLanding) navLanding.onclick = showLanding;
+
+const landLogo = document.getElementById("land-logo");
+if(landLogo) landLogo.onclick = enterAppDirect;
+
+const landNavApp = document.getElementById("land-nav-app");
+if(landNavApp) landNavApp.onclick = enterAppDirect;
+
+[navBrand, navLanding].forEach(el=>{
+  if(el) el.addEventListener("keydown", e=>{ if(e.key==="Enter" || e.key===" ") { e.preventDefault(); showLanding(); } });
+});
+[landLogo, landNavApp].forEach(el=>{
+  if(el) el.addEventListener("keydown", e=>{ if(e.key==="Enter" || e.key===" ") { e.preventDefault(); enterAppDirect(); } });
+});
 
 document.getElementById("ob-done").onclick = finishOnboarding;
 document.getElementById("ob-back").onclick = ()=>{ obShow(obStep > 1 ? obStep - 1 : 1); };
@@ -1025,6 +1060,7 @@ updateTypeHint();
 // Landing is the only entry point to the stepper; the app never force-opens it.
 if(!PROFILE.land){
   document.body.classList.add("show-landing");
+  updateLandingButtons();
 } else {
   enterAppDirect();
 }
