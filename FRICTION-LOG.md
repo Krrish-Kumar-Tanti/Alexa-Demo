@@ -55,3 +55,13 @@
 - **Severity:** Nice-to-have (worked around, see #5).
 - **Workaround:** Filed under General with a precise description (service + region + account + ask) — humans read the text, the dropdowns are just routing hints.
 - **Suggestion:** Add Bedrock/model-access to the service-limit service list, or say on the error page which plan unlocks technical cases.
+
+## 7. Localhost-only demo (conscious trade-off)
+
+- **Task:** Consider deploying to EC2 or Lambda so judges can verify without cloning.
+- **Steps:** Evaluated EC2 (security groups, SSL, domain, debugging remote Python env) and found one competitor (`guptachetan1995/alexa-plus`) ships a live URL — respect to them. Estimated 4–6 hours of infra work with <24 hours to submission.
+- **Expected vs actual:** Expected a one-click deploy path; found none for Python MCP servers (only Node-based `alexa-ai deploy` for the real add-on path).
+- **Severity:** Nice-to-have (demo video covers the flow; `bash run.sh` brings everything up cold in <30 seconds).
+- **Workaround:** Stayed localhost. Documented as a known limitation in README. Added `npx -y @modelcontextprotocol/inspector --cli http://127.0.0.1:8001/mcp --method tools/list` for judges who do clone.
+- **Suggestion:** Offer a CloudFormation / SAM template for hackathon MCP servers (similar to how old Alexa Skills had Lambda blueprints) — would turn a 6-hour deploy into a 10-minute one.
+
