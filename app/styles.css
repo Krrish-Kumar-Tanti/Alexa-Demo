@@ -710,3 +710,11 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 .weather-conds{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--ink-2)}
 .weather-conds b{color:var(--ink-3);font-weight:500;margin-right:2px}
 .list-pills{display:flex;flex-wrap:wrap;gap:6px}
+
+/* ── one-turn-at-a-time: dim inputs while a call is running ── */
+body.busy .chips button,
+body.busy .hero-chips button{pointer-events:none;opacity:.55}
+body.busy #send,
+body.busy #hero-cta{opacity:.5}
+body.busy #hero-cta{pointer-events:none}
+body.busy .mic.listening{animation:none}

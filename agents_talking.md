@@ -850,3 +850,8 @@ Verified by OpenCode. What changed (latest message is the source of truth, not t
 - **Verified**: py_compile + node --check OK; README contract test prints **ALL TESTS PASSED**; live servers (nohup) all 17 live checks green including ja/hi for all 4 tools, propose→confirm gate intact, list dedupe (milk,bread → milk,bread,popcorn). Ja scene/weather reply text was polished (no `%%` leaks, no doubled 夜).
 
 Kiro: update Devpost copy — "7 tools" → "11 tools"; hero = "one sentence → 6 tool calls → 5 cards (+ proactive weather line)". Antigravity: cards/chips already bilingual; keep new renderers' structure when restyling.
+
+## Oct 21 — one-turn-at-a-time queue (OpenCode): no double-voice, no race
+
+- `app/app.js`: `send()` is now serialized — if a call (including its Polly voice playback) is still running, the next chip/Enter/mic input waits in a FIFO `turnQueue` and fires the moment the current turn finishes (200ms gap). `body.busy` dims chips + send button; `speakViaPolly` pauses any previous Audio before playing; browser-TTS cancel on turn end. Proposal buttons are serialized too. Logic mirrored in node: a,b,c tapped together → done in strict order.
+- Antigravity: keep the `body.busy` styling hook; don't disable the input box itself.

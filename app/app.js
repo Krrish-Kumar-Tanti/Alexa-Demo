@@ -677,6 +677,7 @@ function updateChatCount(n){
 
 async function speakViaPolly(text){
   try{
+    if(currentAudio){ try{ currentAudio.pause(); }catch(e){} currentAudio = null; }
     const r = await fetch("/api/speak",{method:"POST",headers:{"Content-Type":"application/json"},
       body: JSON.stringify({text, voice: ttsVoice()})});
     if(!r.ok) return false;
@@ -685,18 +686,36 @@ async function speakViaPolly(text){
     const ring = document.querySelector(".ring");
     await new Promise((res, rej)=>{
       const a = new Audio("data:audio/mpeg;base64,"+d.audio_b64);
+      currentAudio = a;
       if(ring) ring.classList.add("speaking");
-      a.onended = ()=>{ if(ring) ring.classList.remove("speaking"); res(); };
-      a.onerror = ()=>{ if(ring) ring.classList.remove("speaking"); rej(new Error("audio")); };
+      a.onended = ()=>{ if(currentAudio === a) currentAudio = null; if(ring) ring.classList.remove("speaking"); res(); };
+      a.onerror = ()=>{ if(currentAudio === a) currentAudio = null; if(ring) ring.classList.remove("speaking"); rej(new Error("audio")); };
       a.play().catch(rej);
     });
     return true;
   }catch(e){ return false; }
 }
 
-async function send(text){
+// One turn at a time: while a call is in flight the next ask waits in a FIFO
+// queue and runs the moment the current turn (speech included) is done.
+let busy = false;
+const turnQueue = [];
+
+function runNextTurn(){
+  if(turnQueue.length) setTimeout(()=>send(turnQueue.shift(), true), 200);
+}
+
+function setBusy(on){
+  busy = on;
+  document.body.classList.toggle("busy", on);
+  if(!on && window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
+async function send(text, fromQueue){
   text = (text||box.value||"").trim();
   if(!text) return;
+  if(busy && !fromQueue){ turnQueue.push(text); return; }
+  setBusy(true);
   const kids = document.getElementById("kids").checked;
   hideEmptyState();
   hideThinking();
@@ -721,9 +740,13 @@ async function send(text){
       updateChatCount(history.length + 1);
     }
     history.push({user:text, alexa:out.reply});
+    setBusy(false);
+    runNextTurn();
   }catch(e){
     hideThinking();
     bubble("alexa", t08n().error);
+    setBusy(false);
+    runNextTurn();
   }
 }
 
