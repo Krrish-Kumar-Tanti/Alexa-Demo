@@ -49,6 +49,10 @@ try:
         tool_remind_grandma,
         tool_propose_order,
         tool_confirm_order,
+        tool_scene_control,
+        tool_get_weather,
+        tool_check_homework,
+        tool_add_shopping_list,
     )
     MCP_IMPORTED = True
 except Exception:
@@ -76,6 +80,19 @@ except Exception:
     def tool_confirm_order(proposal_id="", confirmed=True):
         return {"ok": False, "error": "mock mode"}
 
+    def tool_scene_control(scene="movie-night", dim_to=20):
+        return {"ok": True, "scene": scene, "lights": {"state": "dimmed", "brightness_pct": dim_to}, "door_do_not_disturb": True}
+
+    def tool_get_weather(city="home"):
+        return {"city": city, "now": "Clear", "temp_c": 27, "evening": "Light rain after 8 PM", "outdoor_play": False}
+
+    def tool_check_homework(kid="kids"):
+        return {"kid": kid, "subject": "Maths chapter 4", "done": False, "minutes_left": 25}
+
+    def tool_add_shopping_list(items=None):
+        its = items or ["milk", "bread"]
+        return {"ok": True, "added": its, "list": its}
+
 
 _PENDING_PROPOSAL = None  # staged order awaiting user approval (same-process API only)
 
@@ -96,7 +113,7 @@ def _pick_lang(profile: Dict[str, Any]) -> str:
 _MOVIE_KEYS = ["movie night", "film", "filmy", "eiga", "映画", "ムービー", "मूवी", "फिल्म", "movie ka", "movie plan"]
 _DOOR_KEYS = ["door", "ring", "package", "delivery", "who is", "darwaza", "darwaze", "दरवाज़ा", "玄関", "genkan"]
 _ORDER_KEYS = ["order", "popcorn", "groceries", "buy", "snack", "samosa", "khana", "注文", "ポップコーン", "サモサ", "食べ物", "たべもの"]
-_CAL_KEYS = ["calendar", "schedule", "meeting", "plan", "free", "homework", "tomorrow", "today", "tonight",
+_CAL_KEYS = ["calendar", "schedule", "meeting", "plan", "free", "tomorrow", "today", "tonight",
              "kab hai", "tithi", "कार्यक्रम", "予定", "カレンダー", "よてい", "karenda"]
 _REMIND_KEYS = ["grandma", "grandmother", "nani", "dadi", "check in", "elderly", "remind grandma", "दादी", "नानी", "दादिमा",
                 "祖母", "そぼ", "おばあちゃん", "sobo", "baat karao"]
@@ -104,7 +121,11 @@ _CONFIRM_KEYS = ["confirm", "place it", "yes, order", "yes order", "confirm kar"
                  "確定", "かくてい", "はい、ちゅうもん"]
 _CANCEL_KEYS = ["cancel", "decline", "never mind", "don't order", "dont order", "cancel karo", "mat order",
                 "रद्द", "キャンセル", "やめて"]
-_TV_KEYS = ["tv", "watch", "play", "kids", "prime", "cricket", "movie"]
+_TV_KEYS = ["tv", "watch", "play", "kids", "cricket", "movie"]
+_SCENE_KEYS = ["scene", "dim", "lights", "mood", "sajao", "ライト", "あかり", "照明"]
+_WEATHER_KEYS = ["weather", "rain", "baarish", "barish", "mausam", "tenki", "天気", "てんき", "あめ", "雨"]
+_HOMEWORK_KEYS = ["homework", "padhai", "study", "宿題", "しゅくだい", "benkyou"]
+_LIST_KEYS = ["shopping list", "to list", "list par", "list mein", "kharidari", "リスト", "りすと"]
 
 # Kids-mode footnote per language (injected into the movie-night sentence).
 _KID_NOTE = {
@@ -130,6 +151,9 @@ _DISPLAY_LABELS = {
     "Package delivered": {"hi": "Package pahunch gaya", "ja": "宅配が届きました"},
     "No motion": {"hi": "Koi hulchul nahi", "ja": "動きなし"},
     "Tomorrow 10:00": {"hi": "Kal 10:00 baje", "ja": "明日 10:00"},
+    "Light rain after 8 PM": {"hi": "8 PM ke baad halki baarish", "ja": "夜8時以降は雨"},
+    "Clear": {"hi": "Saaf", "ja": "はれ"},
+    "Maths chapter 4": {"hi": "Maths chapter 4", "ja": "算数 4章"},
 }
 _CARD_TITLES = {
     "Tonight's picks (kid-safe)": {"hi": "Aaj ki picks (kid-safe)", "ja": "今夜のセレクション（kid-safe）"},
@@ -139,6 +163,10 @@ _CARD_TITLES = {
     "Tomorrow": {"hi": "Kal", "ja": "明日"},
     "TV status": {"hi": "TV status", "ja": "TVのじょうたい"},
     "Grandma check-in": {"hi": "Dadi ka check-in", "ja": "おばあちゃんへのcheck-in"},
+    "Movie-night scene": {"hi": "Movie-night scene", "ja": "movie-night シーン"},
+    "Weather": {"hi": "Mausam", "ja": "お天気"},
+    "Homework check": {"hi": "Homework check", "ja": "宿題チェック"},
+    "Shopping list": {"hi": "Shopping list", "ja": "買い物リスト"},
 }
 _TV_ONOFF = {"en": ("on", "off"), "hi": ("on", "band"), "ja": ("オン", "オフ")}
 _CAL_ITEM_FMT = {"en": "%s at %s", "hi": "%s at %s", "ja": "%s（%s）"}
@@ -209,6 +237,36 @@ _T = {
         "en": "The living-room TV is on %s and kids mode is %s. Say 'movie night' and I'll handle the rest.",
         "hi": "Living-room TV %s par on hai, aur bachon ka mode %s hai. 'movie night' boliye, baaki main dekh lunga.",
         "ja": "リビングのTVは%s、kids modeは%sです。「movie night」と言えば、あとはおまかせを。",
+    },
+    "scene": {
+        "en": "Room's set for movie night — lights dimmed to 20%, front door on do-not-disturb. Nobody interrupts the opening scene.",
+        "hi": "Movie night ke liye room set — lights 20% par dim, darwaza do-not-disturb par. Ab koi beech mein nahi aayega.",
+        "ja": "movie nightの準備 — 照明は20%、玄関は取り込み中モード。オープニングは邪魔されません。",
+    },
+    "weather": {
+        "en": "Home weather: %s, %s°C right now. Evening: %s — a good evening to stay in.",
+        "hi": "Ghar ka mausam: %s, abhi %s°C. Shaam ko: %s — andar rehna better hai.",
+        "ja": "うちの天気：%s、いま%s°C。夜：%s — おうちで過ごすのにいい夜です。",
+    },
+    "homework": {
+        "en": "Kids' homework: %s — about %s minutes left. Once it's done, screen time unlocks.",
+        "hi": "Bachon ka homework: %s — lagbhag %s minute baaki. Khatam hote hi screen time unlock.",
+        "ja": "子どもの宿題：%s — のこり%s分くらい。すませば画面タイム解禁です。",
+    },
+    "homework_done": {
+        "en": "Homework's done — the TV is all theirs tonight.",
+        "hi": "Homework ho gaya — aaj raat TV sab unka.",
+        "ja": "宿題はおわってます — 今夜のTVは自由にどうぞ。",
+    },
+    "list": {
+        "en": "Added %s to the shopping list. On it now: %s.",
+        "hi": "%s list mein add ho gaya. Abhi list par: %s.",
+        "ja": "%sを買い物リストに追加。いまのリスト：%s。",
+    },
+    "movie_weather": {
+        "en": " Heads-up: %s, so staying in is the right call.",
+        "hi": " Dhyan rahe: %s — isliye andar hi theek hai.",
+        "ja": " お知らせ：%s — だからおうちで過ごすのが正解です。",
     },
     "who_you": {
         "en": "I'm Family Captain — your Alexa+ helper for movie nights, front-door checks, "
@@ -404,13 +462,55 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
         _PENDING_PROPOSAL = None
         return _finish(user_text, _say("decline", lang), [], tools_used)
 
+    # --- Room scene: dim lights + door do-not-disturb ---
+    if any(k in t for k in _SCENE_KEYS) and "movie night" not in t and "映画の夜" not in t:
+        scene = tool_scene_control(); tools_used.append("scene_control")
+        text = _say("scene", lang)
+        cards = [{"type": "scene", "title": _card_title("Movie-night scene", lang), "detail": scene}]
+        return _finish(user_text, text, cards, tools_used)
+
+    # --- Homework check (before screen time) ---
+    if any(k in t for k in _HOMEWORK_KEYS):
+        hw = tool_check_homework(); tools_used.append("check_homework")
+        subj = _disp(hw.get("subject", ""), lang)
+        if hw.get("done"):
+            text = _say("homework_done", lang)
+        else:
+            text = _say("homework", lang, subj, str(hw.get("minutes_left", 0)))
+        cards = [{"type": "homework", "title": _card_title("Homework check", lang),
+                  "detail": dict(hw, subject=subj, done=bool(hw.get("done")))}]
+        return _finish(user_text, text, cards, tools_used)
+
+    # --- Weather ---
+    if any(k in t for k in _WEATHER_KEYS):
+        w = tool_get_weather(); tools_used.append("get_weather")
+        now_d = _disp(w.get("now", ""), lang)
+        eve_d = _disp(w.get("evening", ""), lang)
+        text = _say("weather", lang, now_d, str(w.get("temp_c", "")), eve_d)
+        cards = [{"type": "weather", "title": _card_title("Weather", lang),
+                  "detail": dict(w, now=now_d, evening=eve_d)}]
+        return _finish(user_text, text, cards, tools_used)
+
+    # --- Family shopping list ---
+    if any(k in t for k in _LIST_KEYS):
+        extra = [x for x in ("popcorn", "samosa", "juice") if x in t]
+        res = tool_add_shopping_list(extra or None); tools_used.append("add_shopping_list")
+        joiner = "、" if lang == "ja" else ", "
+        text = _say("list", lang, joiner.join(res.get("added", [])), joiner.join(res.get("list", [])))
+        cards = [{"type": "shopping_list", "title": _card_title("Shopping list", lang), "detail": res}]
+        return _finish(user_text, text, cards, tools_used)
+
     # --- Full movie-night orchestration (hero demo flow) ---
     if ("movie night" in t) or any(k in t for k in _MOVIE_KEYS if k != "movie night"):
         cal = tool_get_calendar("today"); tools_used.append("get_calendar")
         tv = tool_tv_control("launch", app="Movies"); tools_used.append("tv_control:launch Movies")
         door = tool_door_status(); tools_used.append("door_status")
         order = tool_order_groceries(["popcorn", "juice"]); tools_used.append("order_groceries")
-        text = _say("movie", lang, _KID_NOTE.get(lang, ""), _disp(door.get("last_event", ""), lang), order.get("eta", ""))
+        scene = tool_scene_control(); tools_used.append("scene_control")
+        w = tool_get_weather(); tools_used.append("get_weather")
+        note = _KID_NOTE.get(lang, "") if profile.get("kids_mode") else ""
+        text = _say("movie", lang, note, _disp(door.get("last_event", ""), lang), order.get("eta", ""))
+        text += _say("movie_weather", lang, _disp(w.get("evening", ""), lang))
         # Try to upgrade wording with Bedrock if enabled (with memory context)
         ai = try_bedrock_reply(user_text, (memory_context() + "\n" + text).strip(), lang)
         if ai:
@@ -420,6 +520,7 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
             {"type": "tv", "title": "Living-Room TV", "detail": tv.get("tv", {})},
             {"type": "door", "title": _card_title("Front door", lang), "detail": dict(door, last_event=_disp(door.get("last_event", ""), lang))},
             {"type": "order", "title": "Order %s" % order.get("order_id", ""), "detail": order},
+            {"type": "scene", "title": _card_title("Movie-night scene", lang), "detail": scene},
         ]
         return _finish(user_text, text, cards, tools_used)
 

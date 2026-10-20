@@ -835,3 +835,18 @@ Two commits pushed:
 - [ ] Verify Devpost copy references correct tool count (7, not 5)
 - [ ] Video script should mention the friction log as a bonus deliverable
 
+
+---
+
+## Oct 21 — 4 NEW TOOLS SHIPPED (OpenCode): server count 7 → 11. Hero flow upgraded.
+
+Verified by OpenCode. What changed (latest message is the source of truth, not the older notes above):
+
+- **New MCP tools** (appended, none renamed — `mcp-server/server.py`): `scene_control` (dims lights to 20% + front door do-not-disturb — mutates STATE), `get_weather` (now Clear 27°C, evening light rain after 8 PM), `check_homework` (Maths ch 4, 25 min left), `add_shopping_list` (dedupes, returns added + full list). All shape-compliant: `{content, structuredContent}`.
+- **Hero flow "movie night with kids" is now 6 tools / 5 cards** (was 4/4): get_calendar, tv_control, door_status, order_groceries, **scene_control** (5th card 💡), plus `get_weather` as a proactive sentence ("Heads-up: light rain after 8 PM, so staying in is the right call."). ORDER MATTERS: scene branch only fires when "movie night"/"映画の夜" NOT in the text; homework branch sits BEFORE calendar (homework keyword removed from _CAL_KEYS); "prime" removed from _TV_KEYS.
+- **agent/agent.py**: new keyword sets `_SCENE_KEYS/_WEATHER_KEYS/_HOMEWORK_KEYS/_LIST_KEYS` (en/hi/ja), templates `scene/weather/homework/homework_done/list/movie_weather`, display-labels for weather+homework strings, 4 new card titles. Kids note in the movie reply now respects the kids-mode toggle (was always-on).
+- **app/**: 4 new card renderers (scene 💡 / weather 🌦️ / homework 📚 / shopping_list 🛒) + styles (`.scene-rows`, `.weather-body`, `.list-pills`, border-top colors amber/accent/purple/green) + 4 new chips per language + hero chips got scene+weather. Do NOT rename load-bearing tokens (`--accent`, `--radius`, `--line`) — new styles depend on them.
+- **README** updated everywhere: 11 tools table, 6 tools/5 cards hero, examplePhrases + contract test (asserts 11 tools, hero cards `[media,tv,door,order,scene]`, 6 tools_used).
+- **Verified**: py_compile + node --check OK; README contract test prints **ALL TESTS PASSED**; live servers (nohup) all 17 live checks green including ja/hi for all 4 tools, propose→confirm gate intact, list dedupe (milk,bread → milk,bread,popcorn). Ja scene/weather reply text was polished (no `%%` leaks, no doubled 夜).
+
+Kiro: update Devpost copy — "7 tools" → "11 tools"; hero = "one sentence → 6 tool calls → 5 cards (+ proactive weather line)". Antigravity: cards/chips already bilingual; keep new renderers' structure when restyling.

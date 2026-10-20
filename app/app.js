@@ -52,6 +52,22 @@ const I18N = {
     propNote: "Nothing is ordered until you say confirm.",
     btnConfirm: "✓ Confirm order",
     btnCancel: "✕ Cancel",
+    sceneSub: "Movie-night scene",
+    sceneLights: "Lights — dimmed to 20%",
+    sceneDnd: "Front door — do-not-disturb",
+    sceneTv: "Living-room TV — ready",
+    sceneBadge: "Scene Active",
+    weatherSub: "Home forecast",
+    weatherNow: "Now",
+    weatherEve: "Evening",
+    weatherBadge: "Updated",
+    hwSub: "Kids mode",
+    hwLeft: "min left",
+    hwBadge: "To finish",
+    hwDoneNote: "Done — screen time unlocked",
+    listSub: "Family shopping list",
+    listBadge: "Added",
+    listOn: "On the list now",
     micTitle: "Voice input (Chrome)",
     ttsOn: "Alexa voice: on",
     ttsOff: "Alexa voice: muted",
@@ -62,12 +78,18 @@ const I18N = {
       ["what's on my calendar today?", "📅 calendar"],
       ["order popcorn and samosa", "🍿 order snacks"],
       ["check in on grandma", "👵 check on grandma"],
+      ["dim the lights", "💡 scene"],
+      ["how's the weather?", "🌦️ weather"],
+      ["is homework done?", "📚 homework"],
+      ["add milk to the shopping list", "🛒 list"],
     ],
     heroChips: [
       ["who is at the front door?", "🔔 front door?"],
       ["what's on my calendar today?", "📅 calendar"],
       ["order popcorn and samosa", "🍿 order snacks"],
       ["check in on grandma", "👵 check on grandma"],
+      ["dim the lights", "💡 scene"],
+      ["how's the weather?", "🌦️ weather"],
     ],
   },
   hi: {
@@ -99,7 +121,22 @@ const I18N = {
     propNote: "Aap confirm karne tak kuch order nahi hoga.",
     btnConfirm: "✓ Order confirm",
     btnCancel: "✕ Cancel",
-    error: "Server band hai — ./run.sh chalaiye, fir try kijiye.",
+    sceneSub: "Movie-night scene",
+    sceneLights: "Lights — 20% par dim",
+    sceneDnd: "Darwaza — do-not-disturb",
+    sceneTv: "Living-room TV — ready",
+    sceneBadge: "Scene on",
+    weatherSub: "Ghar ka mausam",
+    weatherNow: "Abhi",
+    weatherEve: "Shaam",
+    weatherBadge: "Updated",
+    hwSub: "Bachon ka mode",
+    hwLeft: "min baaki",
+    hwBadge: "Khatam karna hai",
+    hwDoneNote: "Ho gaya — screen time unlocked",
+    listSub: "Family shopping list",
+    listBadge: "Add ho gaya",
+    listOn: "Abhi list par",
     micTitle: "Awaaz se poochhiye (Chrome)",
     ttsOn: "Alexa awaaz: on",
     ttsOff: "Alexa awaaz: band",
@@ -110,12 +147,18 @@ const I18N = {
       ["aaj ka plan?", "📅 plan"],
       ["samosa order karo", "🍿 samosa"],
       ["dadi se baat karao", "👵 dadi"],
+      ["lights dim karo", "💡 scene"],
+      ["mausam kaisa hai?", "🌦️ mausam"],
+      ["homework ka status?", "📚 homework"],
+      ["list mein doodh add karo", "🛒 list"],
     ],
     heroChips: [
       ["darwaza pe kaun hai?", "🔔 darwaza?"],
       ["aaj ka plan?", "📅 plan"],
       ["samosa order karo", "🍿 samosa"],
       ["dadi se baat karao", "👵 dadi"],
+      ["lights dim karo", "💡 scene"],
+      ["mausam kaisa hai?", "🌦️ mausam"],
     ],
   },
   ja: {
@@ -146,6 +189,22 @@ const I18N = {
     propNote: "confirmするまで注文はしません。",
     btnConfirm: "✓ 注文を確定",
     btnCancel: "✕ キャンセル",
+    sceneSub: "movie-night シーン",
+    sceneLights: "照明 — 20%におとした",
+    sceneDnd: "玄関 — 取り込み中",
+    sceneTv: "リビングTV — 準備ずみ",
+    sceneBadge: "シーン実行中",
+    weatherSub: "おうちのお天気",
+    weatherNow: "いま",
+    weatherEve: "夜",
+    weatherBadge: "さいしん",
+    hwSub: "kids mode",
+    hwLeft: "ぶんのこり",
+    hwBadge: "のこり",
+    hwDoneNote: "おわってます — 画面タイムOK",
+    listSub: "家族の買い物リスト",
+    listBadge: "追加ずみ",
+    listOn: "いまのリスト",
     error: "サーバーが動いていません — ./run.sh を実行してからもう一度。",
     micTitle: "声で聞く（Chrome）",
     ttsOn: "Alexaの声: オン",
@@ -157,12 +216,18 @@ const I18N = {
       ["今日の予定は？", "📅 予定"],
       ["ポップコーン注文", "🍿 おやつ"],
       ["おばあちゃんに連絡", "👵 おばあちゃん"],
+      ["ライトを落として", "💡 シーン"],
+      ["天気はどう？", "🌦️ 天気"],
+      ["宿題は？", "📚 宿題"],
+      ["リストにぎゅうにゅうを追加", "🛒 リスト"],
     ],
     heroChips: [
       ["玄関はどう？", "🔔 玄関"],
       ["今日の予定は？", "📅 予定"],
       ["ポップコーン注文", "🍿 おやつ"],
       ["おばあちゃんに連絡", "👵 おばあちゃん"],
+      ["ライトを落として", "💡 シーン"],
+      ["天気はどう？", "🌦️ 天気"],
     ],
   },
 };
@@ -488,6 +553,76 @@ function renderCards(cards){
             <button class="btn-confirm" onclick="send('confirm')">${escapeHtml(cfg.btnConfirm)}</button>
             <button class="btn-decline" onclick="send('cancel')">${escapeHtml(cfg.btnCancel)}</button>
           </div>
+        </div>
+      `;
+    } else if(c.type==="scene"){
+      inner += `
+        <div class="vcard-header">
+          <span class="vcard-icon">💡</span>
+          <div>
+            <h4>${escapeHtml(c.title || "Movie-night scene")}</h4>
+            <span class="vcard-sub">${escapeHtml(cfg.sceneSub)}</span>
+          </div>
+          <span class="badge-tag amber">${escapeHtml(cfg.sceneBadge)}</span>
+        </div>
+        <div class="scene-rows">
+          <div class="scene-row"><span>${escapeHtml(cfg.sceneLights)}</span><b>💡</b></div>
+          <div class="scene-row"><span>${escapeHtml(cfg.sceneDnd)}</span><b>🚪</b></div>
+          <div class="scene-row"><span>${escapeHtml(cfg.sceneTv)}</span><b>📺</b></div>
+        </div>
+      `;
+    } else if(c.type==="weather"){
+      const w = c.detail || {};
+      inner += `
+        <div class="vcard-header">
+          <span class="vcard-icon">🌦️</span>
+          <div>
+            <h4>${escapeHtml(c.title || "Weather")}</h4>
+            <span class="vcard-sub">${escapeHtml(cfg.weatherSub)}</span>
+          </div>
+          <span class="badge-tag cyan">${escapeHtml(cfg.weatherBadge)}</span>
+        </div>
+        <div class="weather-body">
+          <span class="weather-temp">${escapeHtml(String(w.temp_c || ""))}°C</span>
+          <div class="weather-conds">
+            <span><b>${escapeHtml(cfg.weatherNow)}</b> ${escapeHtml(w.now || "")}</span>
+            <span><b>${escapeHtml(cfg.weatherEve)}</b> ${escapeHtml(w.evening || "")}</span>
+          </div>
+        </div>
+      `;
+    } else if(c.type==="homework"){
+      const hw = c.detail || {};
+      const done = !!hw.done;
+      inner += `
+        <div class="vcard-header">
+          <span class="vcard-icon">📚</span>
+          <div>
+            <h4>${escapeHtml(c.title || "Homework check")}</h4>
+            <span class="vcard-sub">${escapeHtml(cfg.hwSub)}</span>
+          </div>
+          <span class="badge-tag ${done ? "green" : "amber"}">${done ? "✓" : escapeHtml(cfg.hwBadge)}</span>
+        </div>
+        <div class="scene-rows">
+          <div class="scene-row">
+            <span>${escapeHtml(hw.subject || "")}</span>
+            <b>${done ? escapeHtml(cfg.hwDoneNote) : escapeHtml(String(hw.minutes_left || 0)) + " " + escapeHtml(cfg.hwLeft)}</b>
+          </div>
+        </div>
+      `;
+    } else if(c.type==="shopping_list"){
+      const sl = c.detail || {};
+      const items = sl.list || sl.added || [];
+      inner += `
+        <div class="vcard-header">
+          <span class="vcard-icon">🛒</span>
+          <div>
+            <h4>${escapeHtml(c.title || "Shopping list")}</h4>
+            <span class="vcard-sub">${escapeHtml(cfg.listSub)}</span>
+          </div>
+          <span class="badge-tag green">${escapeHtml(cfg.listBadge)}</span>
+        </div>
+        <div class="list-pills">
+          ${items.map(it=>`<span class="order-item-pill">${escapeHtml(it)}</span>`).join("")}
         </div>
       `;
     } else {

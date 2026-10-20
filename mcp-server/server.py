@@ -47,6 +47,16 @@ STATE = {
     "orders": [],
     "reminders": [],
     "proposals": {},
+    "lights": {"state": "on", "brightness_pct": 80},
+    "weather": {
+        "city": "home",
+        "now": "Clear",
+        "temp_c": 27,
+        "evening": "Light rain after 8 PM",
+        "outdoor_play": False,
+    },
+    "homework": {"subject": "Maths chapter 4", "done": False, "minutes_left": 25},
+    "shopping_list": [],
 }
 
 
@@ -146,6 +156,48 @@ def tool_remind_grandma(message: str = "", call_time: str = "") -> Dict[str, Any
     return copy.deepcopy(reminder)
 
 
+TOOL_SCENES = ("movie-night",)
+
+
+def tool_scene_control(scene: str = "movie-night", dim_to: int = 20) -> Dict[str, Any]:
+    """Apply a room scene: dim the lights, set front door do-not-disturb."""
+    dim_to = max(0, min(100, dim_to))
+    if scene == "movie-night":
+        STATE["lights"]["state"] = "dimmed"
+        STATE["lights"]["brightness_pct"] = dim_to
+        return {
+            "ok": True,
+            "scene": scene,
+            "lights": copy.deepcopy(STATE["lights"]),
+            "door_do_not_disturb": True,
+            "message": "Lights dimmed to %s%%, front door on do-not-disturb" % dim_to,
+        }
+    return {"ok": True, "scene": scene, "lights": copy.deepcopy(STATE["lights"]), "door_do_not_disturb": False}
+
+
+def tool_get_weather(city: str = "home") -> Dict[str, Any]:
+    """Return the home-area forecast (mock, demo-friendly)."""
+    w = copy.deepcopy(STATE["weather"])
+    w["city"] = city
+    return w
+
+
+def tool_check_homework(kid: str = "kids") -> Dict[str, Any]:
+    """Check the kids' homework status before screen time."""
+    hw = copy.deepcopy(STATE["homework"])
+    hw["kid"] = kid
+    return hw
+
+
+def tool_add_shopping_list(items: List[str] = None) -> Dict[str, Any]:
+    """Append items to the family shopping list; returns added + full list."""
+    if not items:
+        items = ["milk", "bread"]
+    merged = STATE["shopping_list"] + [i for i in items if i]
+    STATE["shopping_list"] = list(dict.fromkeys(merged))
+    return {"ok": True, "added": list(items), "list": copy.deepcopy(STATE["shopping_list"])}
+
+
 TOOLS = [
     {
         "name": "get_calendar",
@@ -219,6 +271,43 @@ TOOLS = [
             },
         },
     },
+    {
+        "name": "scene_control",
+        "description": "Apply a room scene: dim the lights and set the front door to do-not-disturb.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "scene": {"type": "string", "default": "movie-night"},
+                "dim_to": {"type": "integer", "default": 20},
+            },
+        },
+    },
+    {
+        "name": "get_weather",
+        "description": "Get the home-area weather forecast (now + evening).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"city": {"type": "string", "default": "home"}},
+        },
+    },
+    {
+        "name": "check_homework",
+        "description": "Check the kids' homework status before screen time.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"kid": {"type": "string", "default": "kids"}},
+        },
+    },
+    {
+        "name": "add_shopping_list",
+        "description": "Add items to the family shopping list.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "items": {"type": "array", "items": {"type": "string"}},
+            },
+        },
+    },
 ]
 
 
@@ -269,6 +358,14 @@ def dispatch_tool(name: str, args: Dict[str, Any]) -> Dict[str, Any]:
             out = tool_propose_order(items=args.get("items"), address=args.get("address", "home"))
         elif name == "confirm_order":
             out = tool_confirm_order(proposal_id=args.get("proposal_id", ""), confirmed=args.get("confirmed", True))
+        elif name == "scene_control":
+            out = tool_scene_control(scene=args.get("scene", "movie-night"), dim_to=int(args.get("dim_to", 20) or 20))
+        elif name == "get_weather":
+            out = tool_get_weather(city=args.get("city", "home"))
+        elif name == "check_homework":
+            out = tool_check_homework(kid=args.get("kid", "kids"))
+        elif name == "add_shopping_list":
+            out = tool_add_shopping_list(items=args.get("items"))
         else:
             raise ValueError("unknown tool: %s" % name)
     except Exception:

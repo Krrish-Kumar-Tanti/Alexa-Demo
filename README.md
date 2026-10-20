@@ -8,7 +8,7 @@ If you're new here (hi, Krrish), read this file top to bottom. It teaches the pr
 
 Everything in this repo is one of three things. Learn these and you understand 90% of it:
 
-**1. The hands — `mcp-server/server.py`.** A small server that exposes 7 tools (calendar, TV, door camera, grocery ordering, proposal gate, confirmation gate, grandma reminders). It speaks an open Amazon-backed standard called MCP, which is just a fixed way of saying *"here are my tools, call them like this."* When anyone — our app, or one day real Alexa+ — wants something done, they call a tool here.
+**1. The hands — `mcp-server/server.py`.** A small server that exposes 11 tools (calendar, TV, door camera, grocery ordering, proposal gate, confirmation gate, grandma reminders, room scenes, weather, homework check, shopping list). It speaks an open Amazon-backed standard called MCP, which is just a fixed way of saying *"here are my tools, call them like this."* When anyone — our app, or one day real Alexa+ — wants something done, they call a tool here.
 
 **2. The receptionist — `agent/agent.py`.** Takes your sentence, figures out which tools to call, and writes the reply. Today it matches keywords ("door" → door tool). When AWS approves our account, a real AI model (Nova/Claude via Bedrock) takes over the thinking. Same tools, smarter receptionist.
 
@@ -22,13 +22,13 @@ Type **"movie night with kids"** and watch it travel:
 
 1. `app/app.js` → `send()` posts your text to `POST /api/chat`.
 2. `api/main.py` → hands it to `run_agent()` in `agent/agent.py`. Thin bridge, no thinking here.
-3. `run_agent()` sees "movie" + "night" and calls 4 tools from the MCP server: `get_calendar`, `tv_control`, `door_status`, `order_groceries`.
+3. `run_agent()` sees "movie" + "night" and calls 6 tools from the MCP server: `get_calendar`, `tv_control`, `door_status`, `order_groceries`, `scene_control`, `get_weather`.
 4. Each tool call is written into the audit ledger, and the turn is saved to memory.
-5. The reply + 4 visual cards + the tool badges come back to the page. If AWS keys are live, Bedrock polishes the wording; if not, the built-in reply is used. The demo never breaks either way.
+5. The reply + 5 visual cards + the tool badges come back to the page. If AWS keys are live, Bedrock polishes the wording; if not, the built-in reply is used. The demo never breaks either way.
 
 Try it with the browser's developer console open — you'll see each step land in real time.
 
-## The tools (the 7 hands — more coming)
+## The tools (the 11 hands — more coming)
 
 | Tool | What it does, in plain words |
 |---|---|
@@ -39,6 +39,10 @@ Try it with the browser's developer console open — you'll see each step land i
 | `propose_order` | Stages an order WITHOUT placing it (the proposal) |
 | `confirm_order` | Places or cancels a staged order — one-time only |
 | `remind_grandma` | Sends Grandma a check-in + schedules the video call |
+| `scene_control` | Sets the room for movie night: dims lights, front door goes do-not-disturb |
+| `get_weather` | Home forecast (now + evening) — powers proactive "stay in" suggestions |
+| `check_homework` | Kids' homework status before screen time unlocks |
+| `add_shopping_list` | Adds items to the family shopping list (dedupes) |
 
 Next up: a store catalog with search, a cart, order history and delivery tracking — same pattern, more hands.
 
@@ -54,12 +58,13 @@ python3 -m uvicorn api.main:app --port 8000   # terminal 2 — face + receptioni
 
 Open http://127.0.0.1:8000 and try these in order — say each out loud if you like, then watch the tool badges:
 
-1. `movie night with kids` → 4 tools, 4 cards. The whole product in one sentence.
+1. `movie night with kids` → 6 tools, 5 cards. The whole product in one sentence.
 2. `who is at the front door?` → 1 tool, camera card.
 3. `order popcorn` → a PROPOSAL, not an order. Nothing spent.
 4. `confirm` → order placed with ID + tracking. (Try `cancel` next time instead.)
 5. `check in on grandma` → message + scheduled call, 2 tools.
-6. `who am i?` → answered from memory, not from code.
+6. `dim the lights` → the room readsies itself without touching "movie night".
+7. `is homework done?` / `add milk to the shopping list` → the family-side extras.
 
 Then open `agent/memory.json` and `data/audit.jsonl` — that's your evening, remembered and receipted.
 
@@ -108,8 +113,10 @@ import sys; sys.path.insert(0,'mcp-server'); sys.path.insert(0,'api')
 from server import app as m; from main import app as a
 c, c2 = TestClient(m), TestClient(a)
 assert c.get('/health').json()['protocol'] == '2025-11-25'
-assert len(c.post('/mcp', json={'jsonrpc':'2.0','id':1,'method':'tools/list','params':{}}).json()['result']['tools']) == 7
-assert len(c2.post('/api/chat', json={'message':'movie night with kids'}).json()['tools_used']) == 4
+assert len(c.post('/mcp', json={'jsonrpc':'2.0','id':1,'method':'tools/list','params':{}}).json()['result']['tools']) == 11
+hero = c2.post('/api/chat', json={'message':'movie night with kids'}).json()
+assert [x['type'] for x in hero['cards']] == ['media','tv','door','order','scene']
+assert len(hero['tools_used']) == 6
 print('ALL TESTS PASSED')"
 ```
 
@@ -143,12 +150,16 @@ Mirroring the official Alexa+ add-on `examplePhrases` format:
     "who is at the front door?",
     "order popcorn and samosa",
     "check in on grandma",
-    "what's on the calendar tomorrow?"
+    "what's on the calendar tomorrow?",
+    "dim the lights",
+    "how's the weather?",
+    "is homework done?",
+    "add milk to the shopping list"
   ]
 }
 ```
 
-Each phrase triggers a different combination of the 7 tools. The first one ("movie night with kids") is the hero demo — 4 tools, 4 cards, one sentence.
+Each phrase triggers a different combination of the 11 tools. The first one ("movie night with kids") is the hero demo — 6 tools, 5 cards, one sentence.
 
 ## Known Limitations
 
