@@ -6,7 +6,7 @@
 
 **Alexa+ Family Captain**: a simulated Alexa+ web experience (Amazon hackathon: Alexa+ track + AWS Builder + Open Source minis).
 One-page UI simulates Alexa+ orchestrating living-room TV + front-door camera + calendar + grocery orders + Grandma check-ins via a real MCP server + agent.
-Hero command: `"movie night with kids"` → 4 tool calls → 4 visual cards. Demo-friendly, no hardware.
+Hero command: `"movie night with kids"` → 6 tool calls → 5 cards. Demo-friendly, no hardware.
 
 Repo: https://github.com/Krrish-Kumar-Tanti/Alexa-Demo · Local root: repo root (all files visible on GitHub, no subfolder).
 
@@ -16,7 +16,7 @@ Repo: https://github.com/Krrish-Kumar-Tanti/Alexa-Demo · Local root: repo root 
    - NO `match` statements, NO `list[dict]`/`dict[str, Any]` annotations (use `typing.List/Dict`), NO `mcp`/`fastmcp`/`strands` SDK imports.
    - `requirements.txt` stays: `fastapi==0.109.2`, `uvicorn==0.27.1`, `pydantic==2.6.1`, `httpx==0.27.0` (test only). `boto3` is OPTIONAL, lazily imported inside `try_bedrock_reply()` only.
 2. **Contracts judges verify — keep stable:**
-   - MCP: `POST /mcp` JSON-RPC 2.0 with methods `initialize` → `protocolVersion "2025-11-25"`, `tools/list` → these 7 names, `tools/call` → `{content, structuredContent}`. Tool names: `get_calendar`, `tv_control`, `door_status`, `order_groceries`, `remind_grandma`, `propose_order`, `confirm_order` (append new tools, never rename).
+   - MCP: `POST /mcp` JSON-RPC 2.0 with methods `initialize` → `protocolVersion "2025-11-25"`, `tools/list` → these 11 names, `tools/call` → `{content, structuredContent}`. Tool names: `get_calendar`, `tv_control`, `door_status`, `order_groceries`, `propose_order`, `confirm_order`, `remind_grandma`, `scene_control`, `get_weather`, `check_homework`, `add_shopping_list` (append new tools, never rename).
    - API: `POST /api/chat` in `{message, history, profile}` → out `{reply, cards, tools_used, mcp_imported}`. `GET /api/health` → `{ok:true}`. `POST /api/speak` in `{text}` → `{audio_b64}` or `{fallback:true}`. `GET /` serves `app/index.html`; `/app/*` static.
    - Agent entry: `agent/agent.py:run_agent(user_text, history, profile)` must always return without raising (mock fallback).
 3. **No build step for UI.** `app/` is vanilla HTML/CSS/JS served by FastAPI. No npm/vite/webpack. Keep it that way until after submission.
@@ -59,7 +59,7 @@ Full contract test: see README "Test" block. It must print `ALL TESTS PASSED`. R
 - [x] `remind_grandma` tool + memory persistence + Bedrock diagram (`docs/aws.md`)
 - [x] Voice (Polly `POST /api/speak` + UI playback) + live-brain ready (Nova/Anthropic auto-format, memory context, open-question answers)
 - [x] Confirm gate (`propose_order`/`confirm_order`) + audit ledger (`data/audit.jsonl`, `GET /api/audit`)
-- [ ] Commerce loop: catalog + cart/history/tracking tools + PIN approval (contracts posted in `agents_talking.md` commerce section)
+- [ ] Commerce loop: catalog + cart/history/tracking tools + PIN approval (contracts posted in `docs/agents_talking.md` commerce section)
 - [ ] Video recording (script in `SUBMISSION.md` §3 — Krrish only, nobody else can record)
 - [ ] Devpost submission (paste Kiro's copy with 7-tool/Nova corrections, collaborators LAST, submit before Oct 23 12pm PDT)
 

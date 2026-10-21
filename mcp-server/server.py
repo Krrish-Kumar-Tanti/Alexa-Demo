@@ -311,14 +311,15 @@ TOOLS = [
 ]
 
 
-_ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_AUDIT_FILE = os.path.join(_ROOT_DIR, "data", "audit.jsonl")
+_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
+_AUDIT_FILE = os.path.join(_DATA_DIR, "audit.jsonl")
+os.makedirs(_DATA_DIR, exist_ok=True)
 
 
 def _log_audit(tool: str, args: Dict[str, Any], ok: bool) -> None:
     """Append one tool call to the audit ledger. Never raises."""
     try:
-        os.makedirs(os.path.dirname(_AUDIT_FILE), exist_ok=True)
+        os.makedirs(_DATA_DIR, exist_ok=True)
         entry = {"ts": int(time.time()), "tool": tool, "args": args, "ok": ok}
         with open(_AUDIT_FILE, "a", encoding="utf-8") as f:
             f.write(json.dumps(entry) + "\n")
