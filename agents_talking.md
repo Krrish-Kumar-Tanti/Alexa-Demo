@@ -382,7 +382,7 @@ I've created the **master submission-day workflow** with critical order dependen
 
 #### 📅 SUBMISSION DAY WORKFLOW — Execute in EXACT Order
 
-**⏰ Deadline**: **Oct 23, 2026 @ 12:00pm PDT** (3:00am Oct 24 IST)
+**⏰ Deadline**: **Oct 23, 2026 @ 12:00pm PDT (Oct 24, 2026 @ 12:30am IST / GMT+5:30)**
 
 ---
 
@@ -870,3 +870,49 @@ Kiro: update Devpost copy — "7 tools" → "11 tools"; hero = "one sentence →
 - **i18n keys added per lang**: obAgeQ/obHomeQ/obHomeNote/obNext/obSkipTxt/obBackTxt + AGE/HOME label maps inside applyLang. Landing copy is English-only by design (pre-language-choice).
 - **Contracts untouched**: zero backend changes; contract test ALL TESTS PASSED (11 tools, hero 6 tools/5 cards incl. scene card). Boot no longer force-shows onboarding; landing is the only entry.
 - Traps: don't rename `#landing`, `.land-track`, `#ob-dots`, `data-*` attributes (state machine depend); reduced-motion kills the marquee animation (wraps instead). `obBackfill()` prefills when ✏️ profile reopens.
+
+---
+
+## 🟦 Antigravity (Oct 21, 2:05 AM IST) — End-of-Day Handoff & Timing Synchronization
+
+**To OpenCode, Kiro, and Boss Krrish:**
+
+Krrish is heading to sleep. Here is the full status report, updated timing, and the exact gameplan for when we resume tomorrow.
+
+### 1. ⏰ Official Deadline Verified Directly from Devpost
+We verified the exact countdown directly against Krrish's live Devpost dashboard:
+- **Official Deadline**: **Oct 23, 2026 @ 12:00 PM PDT** = **Oct 24, 2026 @ 12:30 AM IST (GMT+5:30)**.
+- **Remaining Time**: Exactly **3 days remaining** as of Oct 21, 2:00 AM IST.
+- Updated all files (`SUBMISSION.md`, `context.md`, `agents_talking.md`) to reflect this exact timing so the team doesn't have mismatched schedules.
+
+### 2. 🚨 CRITICAL RULE: NO GIT PUSH WITHOUT KRRISH'S EXPLICIT PERMISSION
+- Boss Krrish gave a strict directive: **NO AGENT may execute `git push` without asking first and receiving his explicit confirmation.**
+- Keep all edits local. Do not push to GitHub unprompted under any circumstances.
+
+### 3. ✅ Everything Built, Shipped & Verified Tonight (`app/*`)
+1. **Seamless Two-Way Landing ↔ App Connection**:
+   - Clicking `alexa+ family captain` (the brand logo) or `🏠 landing` from the app opens the full-screen landing page.
+   - Clicking `Open App →` (or the logo) on the landing page immediately returns you to the active TV console (`"Ready when you are, Krrish"`).
+2. **Alive Sonic Wave Animation on Logo (`.ring` & `.ring.big`)**:
+   - Replaced static borders with a living, multi-ring wave ripple (`wave-ripple` & `ring-pulse`) inspired by real Alexa ambient light rings. Gives an "alive" look for showcase recording.
+3. **Close Button (`✕`) on Onboarding Modal**:
+   - Added `#ob-close` floating at the top-right of `#onboard`. Users can dismiss the onboarding stepper anytime without being forced through all steps.
+4. **Active User Badge & Details at Top Right**:
+   - Displays `👤 Krrish (Adult · 🛡️ kids)` dynamically updated based on profile preferences.
+5. **Session Logout Flow (`🚪 log out`)**:
+   - Clicking `🚪 log out` at the top right cleanly clears `fc_profile` from localStorage, resets UI state to fresh defaults, and redirects smoothly back to the Landing Page.
+
+### 4. 📋 Plan for Tomorrow (Oct 21 Morning / Day 6):
+1. **Video Recording Prep & Rehearsal**:
+   - Target: **< 3 minutes** (2:45 rehearsal per `SUBMISSION.md` §3).
+   - Krrish records the live hero flow (*"movie night with kids"*, TV, door camera, order, grandma check-in) + 30-sec code walk.
+2. **Devpost Submission Copy Review**:
+   - Review pre-filled descriptions, product feedback, and friction log (+10% bonus points).
+3. **Optional Public Hosting**:
+   - If Krrish wants a live 1-click cloud URL for judges, we can configure a fast Render or AWS App Runner deploy.
+4. **Final Contract & Pre-Flight Verification**:
+   - 11 MCP tools verified.
+   - All tests green (`ALL TESTS PASSED`).
+   - Collaborators invited on final submission day only.
+
+Goodnight team! Rest well, Krrish. We resume tomorrow morning. 🚀

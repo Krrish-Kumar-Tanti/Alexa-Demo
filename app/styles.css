@@ -390,7 +390,19 @@ body{
 
 /* ── Card internals ── */
 .vcard-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.vcard-icon{font-size:20px;line-height:1}
+.vcard-icon{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.06em;
+  padding:3px 7px;
+  border-radius:6px;
+  background:rgba(var(--glow-rgb),.1);
+  border:1px solid rgba(var(--glow-rgb),.25);
+  color:var(--accent);
+  line-height:1.2;
+  text-transform:uppercase;
+  flex:none;
+}
 .vcard-header h4{margin:0;font-size:13.5px;font-weight:600;color:var(--ink)}
 .vcard-sub{font-size:11px;color:var(--ink-3);display:block}
 

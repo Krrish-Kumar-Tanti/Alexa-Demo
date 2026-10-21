@@ -126,6 +126,11 @@ _SCENE_KEYS = ["scene", "dim", "lights", "mood", "sajao", "ライト", "あか�
 _WEATHER_KEYS = ["weather", "rain", "baarish", "barish", "mausam", "tenki", "天気", "てんき", "あめ", "雨"]
 _HOMEWORK_KEYS = ["homework", "padhai", "study", "宿題", "しゅくだい", "benkyou"]
 _LIST_KEYS = ["shopping list", "to list", "list par", "list mein", "kharidari", "リスト", "りすと"]
+_WHO_HOME_KEYS = [
+    "who is at home", "who's at home", "whos at home", "who is home", "who's home", "whos home",
+    "who all are home", "ghar par kaun", "ghar mein kaun", "ghar me kaun", "kaun hai ghar",
+    "おうちに誰", "家に誰", "だれがいる"
+]
 
 # Kids-mode footnote per language (injected into the movie-night sentence).
 _KID_NOTE = {
@@ -500,6 +505,38 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
         cards = [{"type": "shopping_list", "title": _card_title("Shopping list", lang), "detail": res}]
         return _finish(user_text, text, cards, tools_used)
 
+    # --- Who is at home ---
+    if any(k in t for k in _WHO_HOME_KEYS):
+        who = []
+        if profile.get("wife_home"):
+            who.append("Wife" if lang != "ja" else "妻")
+        if profile.get("kids_mode") or profile.get("kids_home", True):
+            who.append("Kids" if lang == "en" else "Bachche" if lang == "hi" else "子ども")
+        if profile.get("grandparents_home"):
+            who.append("Grandparents" if lang == "en" else "Dadi-Nani" if lang == "hi" else "祖父母")
+        if profile.get("relatives_home"):
+            who.append("Relatives" if lang == "en" else "Rishtedaar" if lang == "hi" else "親戚")
+        if profile.get("custom_home"):
+            who.append(str(profile.get("custom_home")))
+
+        if not who:
+            who = ["Family" if lang != "ja" else "家族"]
+
+        joiner = "、" if lang == "ja" else ", "
+        who_str = joiner.join(who)
+        if lang == "hi":
+            text = "Ghar par abhi %s hain. Recommendations, snacks aur TV controls inhi ke hisaab se tuned hain." % who_str
+        elif lang == "ja":
+            text = "現在おうちには%sがいらっしゃいます。映画のセレクトやおやつ、家電もぴったり合わせてあります。" % who_str
+        else:
+            text = "At home right now: %s. Everything from movie recommendations to snack orders and home controls is tailored for them." % who_str
+
+        door = tool_door_status(); tools_used.append("door_status")
+        cards = [
+            {"type": "door", "title": _card_title("Front Door", lang), "detail": dict(door, last_event=_disp(door.get("last_event", ""), lang))}
+        ]
+        return _finish(user_text, text, cards, tools_used)
+
     # --- Full movie-night orchestration (hero demo flow) ---
     if ("movie night" in t) or any(k in t for k in _MOVIE_KEYS if k != "movie night"):
         cal = tool_get_calendar("today"); tools_used.append("get_calendar")
@@ -508,15 +545,44 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
         order = tool_order_groceries(["popcorn", "juice"]); tools_used.append("order_groceries")
         scene = tool_scene_control(); tools_used.append("scene_control")
         w = tool_get_weather(); tools_used.append("get_weather")
+        media_items = ["Bluey Special", "Encanto", "Cricket World Cup Highlights"]
+        home_notes = []
+        if profile.get("wife_home"):
+            if lang == "hi":
+                home_notes.append("Wife bhi hain toh date-night picks aur cozy lighting ready hai.")
+            elif lang == "ja":
+                home_notes.append("奥様もご一緒なので、デートナイト向けの作品も並べてあります。")
+            else:
+                home_notes.append("Wife is home too, so date-night favorites and relaxed vibes are queued up.")
+            media_items.append("La La Land")
+        if profile.get("relatives_home"):
+            if lang == "hi":
+                home_notes.append("Rishtedaar bhi aaye hain toh crowd-pleaser picks aur extra snacks set hain.")
+            elif lang == "ja":
+                home_notes.append("ご親戚もいらっしゃるので、みんなで楽しめる作品とおやつを用意しました。")
+            else:
+                home_notes.append("Relatives are over, so crowd-pleaser picks and extra snacks are set.")
+            media_items.append("3 Idiots")
+        if profile.get("custom_home"):
+            cust = str(profile.get("custom_home"))
+            if lang == "hi":
+                home_notes.append("%s ke hisaab se recommendations aur volume adapt kar diye hain." % cust)
+            elif lang == "ja":
+                home_notes.append("%sに合わせて音量とセレクションを調整しました。" % cust)
+            else:
+                home_notes.append("Tuned for %s as well with tailored volume and picks." % cust)
+
         note = _KID_NOTE.get(lang, "") if profile.get("kids_mode") else ""
         text = _say("movie", lang, note, _disp(door.get("last_event", ""), lang), order.get("eta", ""))
         text += _say("movie_weather", lang, _disp(w.get("evening", ""), lang))
+        if home_notes:
+            text += " " + " ".join(home_notes)
         # Try to upgrade wording with Bedrock if enabled (with memory context)
         ai = try_bedrock_reply(user_text, (memory_context() + "\n" + text).strip(), lang)
         if ai:
             text = ai
         cards = [
-            {"type": "media", "title": _card_title("Tonight's picks (kid-safe)", lang), "items": ["Bluey Special", "Encanto", "Cricket World Cup Highlights"]},
+            {"type": "media", "title": _card_title("Tonight's picks (kid-safe)", lang), "items": media_items},
             {"type": "tv", "title": "Living-Room TV", "detail": tv.get("tv", {})},
             {"type": "door", "title": _card_title("Front door", lang), "detail": dict(door, last_event=_disp(door.get("last_event", ""), lang))},
             {"type": "order", "title": "Order %s" % order.get("order_id", ""), "detail": order},

@@ -269,16 +269,16 @@ function t08n(){ return I18N[PROFILE.lang] || I18N.en; }
 // Normalization: lowercase + collapse extra spaces, so case/spacing never break matching.
 let mayConfirm = false;
 const HINT_RULES = [
-  { keys: ["movie night","film","filmy","eiga","映画","ムービー","मूवी","फिल्म","movie ka","movie plan"], hint: "🎬 → <b>get_calendar</b> <b>tv_control</b> <b>door_status</b> <b>order_groceries</b> <b>scene_control</b> <b>get_weather</b>" },
-  { keys: ["scene","dim","lights","mood","sajao","ライト","あかり","照明"], hint: "💡 → <b>scene_control</b>", skipMovie: true },
-  { keys: ["homework","padhai","study","宿題","しゅくだい","benkyou"], hint: "📚 → <b>check_homework</b>" },
-  { keys: ["weather","rain","baarish","barish","mausam","tenki","天気","てんき","あめ","雨"], hint: "🌦️ → <b>get_weather</b>" },
-  { keys: ["shopping list","to list","list par","list mein","kharidari","リスト","りすと"], hint: "🛒 → <b>add_shopping_list</b>" },
-  { keys: ["door","ring","package","delivery","who is","darwaza","darwaze","दरवाज़ा","玄関","genkan"], hint: "🔔 → <b>door_status</b>" },
-  { keys: ["order","popcorn","groceries","buy","snack","samosa","khana","注文","ポップコーン","サモサ","食べ物","たべもの"], hint: "🛒 → <b>propose_order</b> · confirm_order" },
-  { keys: ["calendar","schedule","meeting","plan","free","tomorrow","today","tonight","kab hai","予定","カレンダー","karenda"], hint: "📅 → <b>get_calendar</b>" },
-  { keys: ["grandma","grandmother","nani","dadi","check in","remind","दादी","नानी","祖母","おばあちゃん","baat karao"], hint: "👵 → <b>remind_grandma</b> · get_calendar" },
-  { keys: ["tv","watch","play","kids","cricket","movie"], hint: "📺 → <b>tv_control</b>" },
+  { keys: ["movie night","film","filmy","eiga","映画","ムービー","मूवी","फिल्म","movie ka","movie plan"], hint: "MOVIE • <b>get_calendar</b> <b>tv_control</b> <b>door_status</b> <b>order_groceries</b> <b>scene_control</b> <b>get_weather</b>" },
+  { keys: ["scene","dim","lights","mood","sajao","ライト","あかり","照明"], hint: "SCENE • <b>scene_control</b>", skipMovie: true },
+  { keys: ["homework","padhai","study","宿題","しゅくだい","benkyou"], hint: "HOMEWORK • <b>check_homework</b>" },
+  { keys: ["weather","rain","baarish","barish","mausam","tenki","天気","てんき","あめ","雨"], hint: "WEATHER • <b>get_weather</b>" },
+  { keys: ["shopping list","to list","list par","list mein","kharidari","リスト","りすと"], hint: "SHOPPING • <b>add_shopping_list</b>" },
+  { keys: ["door","ring","package","delivery","who is","darwaza","darwaze","दरवाज़ा","玄関","genkan"], hint: "CAMERA • <b>door_status</b>" },
+  { keys: ["order","popcorn","groceries","buy","snack","samosa","khana","注文","ポップコーン","サモサ","食べ物","たべもの"], hint: "ORDER • <b>propose_order</b> · confirm_order" },
+  { keys: ["calendar","schedule","meeting","plan","free","tomorrow","today","tonight","kab hai","予定","カレンダー","karenda"], hint: "CALENDAR • <b>get_calendar</b>" },
+  { keys: ["grandma","grandmother","nani","dadi","check in","remind","दादी","नानी","祖母","おばあちゃん","baat karao"], hint: "CARE • <b>remind_grandma</b> · get_calendar" },
+  { keys: ["tv","watch","play","kids","cricket","movie"], hint: "TV • <b>tv_control</b>" },
 ];
 const HINT_CONFIRM = ["confirm","place it","yes, order","yes order","confirm kar","haan order","ok order","確定","かくてい"];
 const HINT_CANCEL = ["cancel","decline","never mind","cancel karo","キャンセル"];
@@ -289,13 +289,13 @@ function updateTypeHint(){
   const t = (box.value || "").toLowerCase().replace(/\s+/g, " ").trim();
   let html = "";
   if(mayConfirm && HINT_CONFIRM.some(k=>t.includes(k))){
-    html = "🛒 → <b>confirm_order</b>";
+    html = "ORDER • <b>confirm_order</b>";
   } else if(mayConfirm && HINT_CANCEL.some(k=>t.includes(k))){
-    html = "✕ → <b>confirm_order</b> (decline)";
+    html = "CANCEL • <b>confirm_order</b> (decline)";
   } else {
     for(const r of HINT_RULES){
       if(r.skipMovie && (t.includes("movie night") || t.includes("映画の夜"))) continue;
-      if(r.keys.some(k=>t.includes(k))){ html = "✓ " + r.hint; break; }
+      if(r.keys.some(k=>t.includes(k))){ html = r.hint; break; }
     }
   }
   el.innerHTML = html;
@@ -386,9 +386,18 @@ function applyLang(lang){
   set("ob-skip2", cfg.obSkipTxt);
   set("ob-back", cfg.obBackTxt);
   const AGE_LABELS = { en: ["Kid","Teen","Adult","60+"], hi: ["Bacha","Teen","Adult","60+"], ja: ["子ども","10代","おとな","60+"] };
-  const HOME_LABELS = { en: ["🧒 Kids","👵 Grandparents"], hi: ["🧒 Bachche","👵 Dadi-Nani"], ja: ["🧒 子ども","👵 ばあば"] };
+  const HOME_LABELS = {
+    kids: { en: "Kids", hi: "Bachche", ja: "子ども" },
+    wife: { en: "Wife", hi: "Wife", ja: "妻" },
+    grandma: { en: "Grandparents", hi: "Dadi-Nani", ja: "祖父母" },
+    relatives: { en: "Relatives", hi: "Rishtedaar", ja: "親戚" },
+    __custom: { en: "Type", hi: "Type", ja: "入力" },
+  };
   document.querySelectorAll("#ob-ages [data-age]").forEach(b=>{ b.textContent = AGE_LABELS[lang][["kid","teen","adult","60s"].indexOf(b.dataset.age)]; });
-  document.querySelectorAll("#ob-homes [data-home]").forEach(b=>{ b.textContent = HOME_LABELS[lang][b.dataset.home === "kids" ? 0 : 1]; });
+  document.querySelectorAll("#ob-homes [data-home]").forEach(b=>{
+    const h = b.dataset.home;
+    if(HOME_LABELS[h] && HOME_LABELS[h][lang]) b.textContent = HOME_LABELS[h][lang];
+  });
   const obCustom = document.getElementById("ob-name-input");
   if(obCustom) obCustom.placeholder = cfg.obCustomPh;
   set("hero-title", heroTitleText());
@@ -469,7 +478,7 @@ function renderCards(cards){
       const items = c.items || [];
       inner += `
         <div class="vcard-header">
-          <span class="vcard-icon">🎬</span>
+          <span class="vcard-icon">STREAM</span>
           <div>
             <h4>${escapeHtml(c.title || "Tonight's picks")}</h4>
             <span class="vcard-sub">${escapeHtml(cfg.mediaSub)}</span>
@@ -490,7 +499,7 @@ function renderCards(cards){
       const tv = c.detail || {};
       inner += `
         <div class="vcard-header">
-          <span class="vcard-icon">📺</span>
+          <span class="vcard-icon">TV</span>
           <div>
             <h4>${escapeHtml(c.title || "Living-Room TV")}</h4>
             <span class="vcard-sub">Living Room • 4K TV</span>
@@ -505,9 +514,9 @@ function renderCards(cards){
             </div>
           </div>
           <div class="tv-meta-row">
-            <span>🔊 Volume: <b>${escapeHtml(String(tv.volume || 22))}</b></span>
-            <span>⚡ Power: <b style="color:var(--green)">ON</b></span>
-            <span>📡 Input: <b>HDMI 1</b></span>
+            <span>Volume: <b>${escapeHtml(String(tv.volume || 22))}</b></span>
+            <span>Power: <b style="color:var(--green)">ON</b></span>
+            <span>Input: <b>HDMI 1</b></span>
           </div>
         </div>
       `;
@@ -515,7 +524,7 @@ function renderCards(cards){
       const door = c.detail || {};
       inner += `
         <div class="vcard-header">
-          <span class="vcard-icon">🔔</span>
+          <span class="vcard-icon">CAMERA</span>
           <div>
             <h4>${escapeHtml(c.title || "Front Door Camera")}</h4>
             <span class="vcard-sub">${escapeHtml(cfg.doorSub)}</span>
@@ -529,7 +538,6 @@ function renderCards(cards){
             <span class="cam-time">${escapeHtml(door.time || "Just now")}</span>
           </div>
           <div class="cam-event-banner">
-            <span class="cam-event-icon">📦</span>
             <div class="cam-event-text">
               <b>${escapeHtml(door.last_event || "Motion detected")}</b>
               <small>${escapeHtml(cfg.doorHint)}</small>
@@ -542,7 +550,7 @@ function renderCards(cards){
       const items = ord.items || [];
       inner += `
         <div class="vcard-header">
-          <span class="vcard-icon">🍿</span>
+          <span class="vcard-icon">ORDER</span>
           <div>
             <h4>${escapeHtml(c.title || "Grocery Order")}</h4>
             <span class="vcard-sub">ID: ${escapeHtml(ord.order_id || "ORD-LIVE")}</span>
@@ -564,7 +572,6 @@ function renderCards(cards){
           <div class="order-items-list">
             ${items.map(it=>`
               <span class="order-item-pill">
-                ${it.includes("popcorn") ? "🍿" : it.includes("samosa") ? "🥟" : it.includes("juice") ? "🧃" : "🛍️"}
                 ${escapeHtml(it)}
               </span>
             `).join("")}
@@ -576,7 +583,7 @@ function renderCards(cards){
       const events = cal.events || [];
       inner += `
         <div class="vcard-header">
-          <span class="vcard-icon">📅</span>
+          <span class="vcard-icon">CALENDAR</span>
           <div>
             <h4>${escapeHtml(c.title || "Family Calendar")}</h4>
             <span class="vcard-sub">${escapeHtml(cal.day ? cal.day.toUpperCase() : "TODAY")}</span>
@@ -602,7 +609,7 @@ function renderCards(cards){
       const rem = c.detail || {};
       inner += `
         <div class="vcard-header">
-          <span class="vcard-icon">👵</span>
+          <span class="vcard-icon">CARE</span>
           <div>
             <h4>${escapeHtml(c.title || "Grandma Check-in")}</h4>
             <span class="vcard-sub">${escapeHtml(cfg.remindSub)}</span>
@@ -625,7 +632,7 @@ function renderCards(cards){
       const items = prop.items || [];
       inner += `
         <div class="vcard-header">
-          <span class="vcard-icon">🛡️</span>
+          <span class="vcard-icon">APPROVAL</span>
           <div>
             <h4>${escapeHtml(c.title || "Confirm Your Order")}</h4>
             <span class="vcard-sub">Proposal: ${escapeHtml(prop.proposal_id || "PROP")}</span>
@@ -647,7 +654,7 @@ function renderCards(cards){
     } else if(c.type==="scene"){
       inner += `
         <div class="vcard-header">
-          <span class="vcard-icon">💡</span>
+          <span class="vcard-icon">SCENE</span>
           <div>
             <h4>${escapeHtml(c.title || "Movie-night scene")}</h4>
             <span class="vcard-sub">${escapeHtml(cfg.sceneSub)}</span>
@@ -655,16 +662,16 @@ function renderCards(cards){
           <span class="badge-tag amber">${escapeHtml(cfg.sceneBadge)}</span>
         </div>
         <div class="scene-rows">
-          <div class="scene-row"><span>${escapeHtml(cfg.sceneLights)}</span><b>💡</b></div>
-          <div class="scene-row"><span>${escapeHtml(cfg.sceneDnd)}</span><b>🚪</b></div>
-          <div class="scene-row"><span>${escapeHtml(cfg.sceneTv)}</span><b>📺</b></div>
+          <div class="scene-row"><span>${escapeHtml(cfg.sceneLights)}</span><b>ACTIVE</b></div>
+          <div class="scene-row"><span>${escapeHtml(cfg.sceneDnd)}</span><b>ACTIVE</b></div>
+          <div class="scene-row"><span>${escapeHtml(cfg.sceneTv)}</span><b>ACTIVE</b></div>
         </div>
       `;
     } else if(c.type==="weather"){
       const w = c.detail || {};
       inner += `
         <div class="vcard-header">
-          <span class="vcard-icon">🌦️</span>
+          <span class="vcard-icon">WEATHER</span>
           <div>
             <h4>${escapeHtml(c.title || "Weather")}</h4>
             <span class="vcard-sub">${escapeHtml(cfg.weatherSub)}</span>
@@ -684,12 +691,12 @@ function renderCards(cards){
       const done = !!hw.done;
       inner += `
         <div class="vcard-header">
-          <span class="vcard-icon">📚</span>
+          <span class="vcard-icon">HOMEWORK</span>
           <div>
             <h4>${escapeHtml(c.title || "Homework check")}</h4>
             <span class="vcard-sub">${escapeHtml(cfg.hwSub)}</span>
           </div>
-          <span class="badge-tag ${done ? "green" : "amber"}">${done ? "✓" : escapeHtml(cfg.hwBadge)}</span>
+          <span class="badge-tag ${done ? "green" : "amber"}">${done ? "DONE" : escapeHtml(cfg.hwBadge)}</span>
         </div>
         <div class="scene-rows">
           <div class="scene-row">
@@ -703,7 +710,7 @@ function renderCards(cards){
       const items = sl.list || sl.added || [];
       inner += `
         <div class="vcard-header">
-          <span class="vcard-icon">🛒</span>
+          <span class="vcard-icon">SHOPPING</span>
           <div>
             <h4>${escapeHtml(c.title || "Shopping list")}</h4>
             <span class="vcard-sub">${escapeHtml(cfg.listSub)}</span>
@@ -728,7 +735,7 @@ function renderCards(cards){
 
 function renderTools(tools){
   if(!tools || !tools.length){ toolsEl.innerHTML='<p class="muted">None yet.</p>'; return; }
-  toolsEl.innerHTML = tools.map(t=>'<span class="tool">🔧 '+escapeHtml(t)+"</span>").join(" ");
+  toolsEl.innerHTML = tools.map(t=>'<span class="tool">'+escapeHtml(t)+"</span>").join(" ");
 }
 
 async function fetchAuditLedger(){
@@ -747,7 +754,7 @@ async function fetchAuditLedger(){
       return `
         <div class="audit-row ${e.ok ? 'ok' : 'err'}">
           <div class="audit-main">
-            <span class="audit-tool">⚡ ${escapeHtml(e.tool)}</span>
+            <span class="audit-tool">${escapeHtml(e.tool)}</span>
             <span class="audit-status ${e.ok ? 'ok' : 'err'}">${e.ok ? 'PASS' : 'FAIL'}</span>
           </div>
           <span class="audit-time">${t}</span>
@@ -815,7 +822,19 @@ async function send(text, fromQueue){
   showThinking();
   try{
     const r = await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({message:text, history, profile:{name:PROFILE.name, lang:PROFILE.lang, kids_mode:kids}})});
+      body: JSON.stringify({
+        message: text,
+        history,
+        profile: {
+          name: PROFILE.name,
+          lang: PROFILE.lang,
+          kids_mode: kids,
+          wife_home: !!PROFILE.wife_home,
+          grandparents_home: !!PROFILE.grandparents_home,
+          relatives_home: !!PROFILE.relatives_home,
+          custom_home: PROFILE.custom_home || ""
+        }
+      })});
     if(!r.ok) throw new Error("http " + r.status);
     const out = await r.json();
     if(!out || typeof out.reply !== "string") throw new Error("bad payload");
@@ -855,7 +874,10 @@ const OB_DEFAULTS = {
   agegroup: PROFILE.agegroup || "",
   gender: PROFILE.gender || "",
   kids_home: PROFILE.kids_home !== undefined ? PROFILE.kids_home : true,
+  wife_home: PROFILE.wife_home !== undefined ? PROFILE.wife_home : false,
   grandparents_home: PROFILE.grandparents_home !== undefined ? PROFILE.grandparents_home : false,
+  relatives_home: PROFILE.relatives_home !== undefined ? PROFILE.relatives_home : false,
+  custom_home: PROFILE.custom_home || "",
 };
 
 function obSel(containerId, attrKey, val){
@@ -894,7 +916,11 @@ function updateUserHeader(){
   if(detailsEl){
     const bits = [];
     if(PROFILE.agegroup) bits.push(PROFILE.agegroup);
-    if(PROFILE.kids_home) bits.push("🛡️ kids");
+    if(PROFILE.kids_home) bits.push("kids");
+    if(PROFILE.wife_home) bits.push("wife");
+    if(PROFILE.grandparents_home) bits.push("grandparents");
+    if(PROFILE.relatives_home) bits.push("relatives");
+    if(PROFILE.custom_home) bits.push(PROFILE.custom_home);
     if(PROFILE.lang && PROFILE.lang !== "en") bits.push(PROFILE.lang.toUpperCase());
     detailsEl.textContent = bits.length ? `• ${bits.join(" · ")}` : "";
   }
@@ -937,20 +963,48 @@ function obBackfill(){
   if(custom){ custom.value = obName; if(![...document.querySelectorAll("#ob-names button")].some(b=>b.classList.contains("sel"))){ custom.hidden = false; } else custom.hidden = true; }
   obSel("ob-ages", "data-age", OB_DEFAULTS.agegroup);
   obSel("ob-gends", "data-gender", OB_DEFAULTS.gender);
-  obSel("ob-homes", "data-home", OB_DEFAULTS.kids_home ? "kids" : "");
-  document.querySelector('#ob-homes [data-home="grandma"]').classList.toggle("sel", OB_DEFAULTS.grandparents_home);
+  
+  const hKids = document.querySelector('#ob-homes [data-home="kids"]');
+  if(hKids) hKids.classList.toggle("sel", !!OB_DEFAULTS.kids_home);
+  const hWife = document.querySelector('#ob-homes [data-home="wife"]');
+  if(hWife) hWife.classList.toggle("sel", !!OB_DEFAULTS.wife_home);
+  const hGrandma = document.querySelector('#ob-homes [data-home="grandma"]');
+  if(hGrandma) hGrandma.classList.toggle("sel", !!OB_DEFAULTS.grandparents_home);
+  const hRelatives = document.querySelector('#ob-homes [data-home="relatives"]');
+  if(hRelatives) hRelatives.classList.toggle("sel", !!OB_DEFAULTS.relatives_home);
+  const hCustom = document.querySelector('#ob-homes [data-home="__custom"]');
+  const hInput = document.getElementById("ob-home-input");
+  if(hInput){
+    hInput.value = OB_DEFAULTS.custom_home || "";
+    if(OB_DEFAULTS.custom_home){
+      hInput.hidden = false;
+      if(hCustom) hCustom.classList.add("sel");
+    } else {
+      hInput.hidden = true;
+      if(hCustom) hCustom.classList.remove("sel");
+    }
+  }
   obLang = PROFILE.lang || "en";
 }
 
 function finishOnboarding(){
   const custom = document.getElementById("ob-name-input");
   if(custom && custom.value.trim() && !custom.hidden) obName = custom.value.trim();
+  const homeCustom = document.getElementById("ob-home-input");
+  if(homeCustom && homeCustom.value.trim() && !homeCustom.hidden) {
+    OB_DEFAULTS.custom_home = homeCustom.value.trim();
+  } else if(homeCustom && homeCustom.hidden) {
+    OB_DEFAULTS.custom_home = "";
+  }
   PROFILE.name = obName || "Family";
   PROFILE.land = "saved";
   PROFILE.agegroup = OB_DEFAULTS.agegroup;
   PROFILE.gender = OB_DEFAULTS.gender;
   PROFILE.kids_home = OB_DEFAULTS.kids_home;
+  PROFILE.wife_home = OB_DEFAULTS.wife_home;
   PROFILE.grandparents_home = OB_DEFAULTS.grandparents_home;
+  PROFILE.relatives_home = OB_DEFAULTS.relatives_home;
+  PROFILE.custom_home = OB_DEFAULTS.custom_home;
   saveProfile();
   document.body.classList.remove("show-landing");
   if(onboardEl) onboardEl.hidden = true;
@@ -993,11 +1047,14 @@ const logoutBtn = document.getElementById("logout-btn");
 if(logoutBtn){
   logoutBtn.onclick = ()=>{
     localStorage.removeItem("fc_profile");
-    PROFILE = { name: "Family", lang: "en", land: "" };
+    PROFILE = { name: "Family", lang: "en", land: "", kids_home: true, wife_home: false, grandparents_home: false, relatives_home: false, custom_home: "" };
     OB_DEFAULTS.agegroup = "";
     OB_DEFAULTS.gender = "";
     OB_DEFAULTS.kids_home = true;
+    OB_DEFAULTS.wife_home = false;
     OB_DEFAULTS.grandparents_home = false;
+    OB_DEFAULTS.relatives_home = false;
+    OB_DEFAULTS.custom_home = "";
     obName = "Krrish";
     obLang = "en";
     updateUserHeader();
@@ -1067,9 +1124,28 @@ document.addEventListener("click", (e)=>{
   }
   const hBtn = e.target.closest("#ob-homes button");
   if(hBtn){
-    const key = hBtn.dataset.home === "kids" ? "kids_home" : "grandparents_home";
-    OB_DEFAULTS[key] = !OB_DEFAULTS[key];
-    hBtn.classList.toggle("sel", OB_DEFAULTS[key]);
+    const dHome = hBtn.dataset.home;
+    if(dHome === "__custom"){
+      const inp = document.getElementById("ob-home-input");
+      if(inp){
+        inp.hidden = !inp.hidden;
+        hBtn.classList.toggle("sel", !inp.hidden);
+        if(!inp.hidden) inp.focus();
+        else OB_DEFAULTS.custom_home = "";
+      }
+    } else {
+      const keyMap = {
+        kids: "kids_home",
+        wife: "wife_home",
+        grandma: "grandparents_home",
+        relatives: "relatives_home"
+      };
+      const key = keyMap[dHome];
+      if(key){
+        OB_DEFAULTS[key] = !OB_DEFAULTS[key];
+        hBtn.classList.toggle("sel", OB_DEFAULTS[key]);
+      }
+    }
     return;
   }
 });
@@ -1097,9 +1173,9 @@ const ttsBtn = document.getElementById("tts-toggle");
 if(ttsBtn){
   ttsBtn.onclick=()=>{
     voiceEnabled = !voiceEnabled;
-    ttsBtn.textContent = voiceEnabled ? "🔊" : "🔇";
     ttsBtn.title = voiceEnabled ? t08n().ttsOn : t08n().ttsOff;
     ttsBtn.classList.toggle("muted", !voiceEnabled);
+    ttsBtn.classList.toggle("active", voiceEnabled);
     if(!voiceEnabled && window.speechSynthesis) window.speechSynthesis.cancel();
   };
 }

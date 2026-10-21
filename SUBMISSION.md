@@ -1,7 +1,7 @@
 # SUBMISSION.md — Devpost Checklist + Video Script + Feedback Templates
 
 > Hackathon: **Build, Ship, Shape: Amazon Developer Hackathon** · https://amazonappdev2026.devpost.com/
-> Deadline: **Oct 23, 2026 @ 12:00pm PDT** · Track: **Alexa+** (+ AWS Builder + Open Source minis)
+> Deadline: **Oct 23, 2026 @ 12:00pm PDT (Oct 24, 2026 @ 12:30am IST / GMT+5:30)** · Track: **Alexa+** (+ AWS Builder + Open Source minis)
 > Our repo: https://github.com/Krrish-Kumar-Tanti/Alexa-Demo
 
 ## 1. What we are entering

@@ -5,13 +5,13 @@
 ## 1. Who, what, where
 
 - Human: **Krrish Kumar Tanti** — 2nd-year CSE, beginner, learns by doing. Teach in plain words, zero jargon. He hates AI-sounding text and robotic commit messages. He sends phone screenshots and wants "tell me one by one" guidance.
-- Project: **Alexa+ Family Captain** — simulated Alexa+ web demo for the Amazon hackathon (Alexa+ track + AWS Builder + Open Source minis). Deadline **Oct 23, 12pm PDT**.
+- Project: **Alexa+ Family Captain** — simulated Alexa+ web demo for the Amazon hackathon (Alexa+ track + AWS Builder + Open Source minis). Deadline **Oct 23, 12:00pm PDT (Oct 24, 12:30am IST / GMT+5:30)**.
 - Repo: https://github.com/Krrish-Kumar-Tanti/Alexa-Demo · branch `master` (only branch) · local root `/Users/harshtanti/Krrish/amazon developer hackathon` (flat — all files at root, that was a deliberate fix).
-- Team order (boss-posted, non-negotiable): **Krrish → you (OpenCode, backend + all commits) → Antigravity (`app/*` UI only) + Kiro (submission copy/video timing)**. Coordination file: `agents_talking.md` (append-only, NEVER edit another agent's messages, never let them push).
+- Team order (boss-posted, non-negotiable): **Krrish → you (OpenCode, backend + all commits) → Antigravity (`app/*` UI only) + Kiro (submission copy/video timing)**. Coordination file: `agents_talking.md` (append-only, NEVER edit another agent's messages, never let them push without permission).
 
 ## 2. Architecture (30-second version)
 
-- `mcp-server/server.py` — MCP 2025-11-25 Streamable HTTP, **7 tools**: get_calendar, tv_control, door_status, order_groceries, propose_order, confirm_order, remind_grandma. Plain FastAPI (no SDK — Python here is 3.9.6, SDKs need 3.10+). `dispatch_tool` logs every call to `data/audit.jsonl`.
+- `mcp-server/server.py` — MCP 2025-11-25 Streamable HTTP, **11 tools**: get_calendar, tv_control, door_status, order_groceries, propose_order, confirm_order, remind_grandma, scene_control, get_weather, check_homework, add_shopping_list. Plain FastAPI (no SDK — Python here is 3.9.6, SDKs need 3.10+). `dispatch_tool` logs every call to `data/audit.jsonl`.
 - `agent/agent.py` — `run_agent()` keyword router (never raises; every branch ends in `_finish`). Bedrock via lazy `boto3` (`try_bedrock_reply`, Nova format auto-detected, Anthropic fallback supported), last-6-turns memory context, open-question answers (who-am-i/capabilities). `.env` auto-loader built in.
 - `api/main.py` — thin bridge: `POST /api/chat`, `GET /api/health|memory|audit`, `POST /api/speak` (Polly Neural → base64 MP3, `{fallback:true}` on any error). Serves `app/`.
 - `app/` — vanilla HTML/CSS/JS, no build step. Cards for all 7 types + proposal + TTS toggle + audit panel + memory badge.
