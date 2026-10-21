@@ -121,6 +121,8 @@ _CONFIRM_KEYS = ["confirm", "place it", "yes, order", "yes order", "confirm kar"
                  "確定", "かくてい", "はい、ちゅうもん"]
 _CANCEL_KEYS = ["cancel", "decline", "never mind", "don't order", "dont order", "cancel karo", "mat order",
                 "रद्द", "キャンセル", "やめて"]
+_BARE_CONFIRM_KEYS = ["yes", "haan", "हाँ", "hai", "はい"]
+_BARE_CANCEL_KEYS = ["no", "nahi", "नहीं", "いいえ"]
 _TV_KEYS = ["tv", "watch", "play", "kids", "cricket", "movie"]
 _SCENE_KEYS = ["scene", "dim", "lights", "mood", "sajao", "ライト", "あかり", "照明"]
 _WEATHER_KEYS = ["weather", "rain", "baarish", "barish", "mausam", "tenki", "天気", "てんき", "あめ", "雨"]
@@ -214,11 +216,11 @@ _T = {
         "ja": "玄関：%s（%s）。いまは静かです。スナップショットをTVに映しますか？",
     },
     "propose": {
-        "en": "Popcorn and samosa are ready for home delivery. Say 'confirm' to place the order, "
+        "en": "%s ready for home delivery. Say 'confirm' to place the order, "
               "or 'cancel' to drop it. Nothing's ordered until you say so.",
-        "hi": "Popcorn aur samosa home delivery ke liye tayyar hain. 'confirm' boliye toh order lag jayega, "
+        "hi": "%s home delivery ke liye tayyar hain. 'confirm' boliye toh order lag jayega, "
               "'cancel' boliye toh drop ho jayega. Aap confirm karne tak kuch order nahi hoga.",
-        "ja": "ポップコーンとサモサを届けように用意しました。「confirm」で注文します。「cancel」でやめます。あなたがconfirmするまで注文はしません。",
+        "ja": "%sを届けように用意しました。「confirm」で注文します。「cancel」でやめます。あなたがconfirmするまで注文はしません。",
     },
     "calendar": {
         "en": "%s's plan: %s. You're free after 7:30pm — that's your movie-night window.",
@@ -433,6 +435,70 @@ def _finish(user_text: str, reply: str, cards: List[Dict[str, Any]], tools_used:
     }
 
 
+def _extract_order_items(user_text: str) -> List[str]:
+    """Extract up to 5 items to order from user text; fallback to popcorn and samosa."""
+    t = user_text.lower()
+    cut = -1
+    for kw in ("order", "buy"):
+        idx = t.find(kw)
+        if idx != -1:
+            end = idx + len(kw)
+            if cut == -1 or end < cut:
+                cut = end
+    raw = t[cut:] if cut != -1 else t
+    s = raw
+    for sep in [",", "、", " and ", " & ", " + ", " aur "]:
+        s = s.replace(sep, "|")
+    parts = [p.strip() for p in s.split("|") if p.strip()]
+
+    drop_words = {
+        "order", "orders", "ordering",
+        "buy", "buys", "buying",
+        "snack", "snacks",
+        "grocery", "groceries",
+        "some", "please", "the", "a", "an",
+        "khana", "karo", "chahiye", "do", "bhejo", "mangao",
+        "for", "me", "us", "to", "with",
+        "注文", "ちゅうもん", "食べ物", "たべもの", "お願い", "おねがい",
+        "chummon", "kardo",
+    }
+
+    items = []
+    for part in parts:
+        words = [w.strip("!?,.:;\"'()[]{}") for w in part.split()]
+        cleaned = [w for w in words if w and w not in drop_words]
+        if cleaned:
+            item = " ".join(cleaned)
+            for p in ("を", "の", "に", "で"):
+                if item.endswith(p) and len(item) > len(p):
+                    item = item[:-len(p)].strip()
+            if item and item not in drop_words and item not in items:
+                items.append(item)
+
+    if not items and cut != -1:
+        kw_len = len("order") if t.find("order") != -1 else len("buy")
+        prefix = t[:cut - kw_len]
+        s = prefix
+        for sep in [",", "、", " and ", " & ", " + ", " aur "]:
+            s = s.replace(sep, "|")
+        parts = [p.strip() for p in s.split("|") if p.strip()]
+        for part in parts:
+            words = [w.strip("!?,.:;\"'()[]{}") for w in part.split()]
+            cleaned = [w for w in words if w and w not in drop_words]
+            if cleaned:
+                item = " ".join(cleaned)
+                for p in ("を", "の", "に", "で"):
+                    if item.endswith(p) and len(item) > len(p):
+                        item = item[:-len(p)].strip()
+                if item and item not in drop_words and item not in items:
+                    items.append(item)
+
+    items = items[:5]
+    if not items:
+        items = ["popcorn", "samosa"]
+    return items
+
+
 def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dict[str, Any] = None) -> Dict[str, Any]:
     """Main entry point used by api/main.py and demo video."""
     if history is None:
@@ -447,7 +513,10 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
     global _PENDING_PROPOSAL
 
     # --- Confirm / cancel a staged order (nothing executes without approval) ---
-    if any(k in t for k in _CONFIRM_KEYS) and _PENDING_PROPOSAL:
+    t_words = [w.strip("!?,.:;\"'") for w in t.split()]
+    is_confirm = any(k in t for k in _CONFIRM_KEYS) or any(k in t_words or k == t.strip() for k in _BARE_CONFIRM_KEYS) or ("はい" in t)
+    is_cancel = any(k in t for k in _CANCEL_KEYS) or any(k in t_words or k == t.strip() for k in _BARE_CANCEL_KEYS) or ("いいえ" in t)
+    if is_confirm and _PENDING_PROPOSAL:
         res = tool_confirm_order(_PENDING_PROPOSAL, True); tools_used.append("confirm_order")
         _PENDING_PROPOSAL = None
         if res.get("ok") and res.get("status") == "executed":
@@ -457,7 +526,7 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
         else:
             text = _say("confirm_fail", lang, res.get("error", "unknown"))
         return _finish(user_text, text, cards, tools_used)
-    if any(k in t for k in _CANCEL_KEYS) and _PENDING_PROPOSAL:
+    if is_cancel and _PENDING_PROPOSAL:
         tool_confirm_order(_PENDING_PROPOSAL, False); tools_used.append("confirm_order:decline")
         _PENDING_PROPOSAL = None
         return _finish(user_text, _say("decline", lang), [], tools_used)
@@ -531,9 +600,19 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
         return _finish(user_text, text, cards, tools_used)
 
     if any(k in t for k in _ORDER_KEYS):
-        prop = tool_propose_order(["popcorn", "samosa"]); tools_used.append("propose_order")
+        items = _extract_order_items(user_text)
+        prop = tool_propose_order(items); tools_used.append("propose_order")
         _PENDING_PROPOSAL = prop.get("proposal_id")
-        text = _say("propose", lang)
+        if items == ["popcorn", "samosa"]:
+            item_desc = "Popcorn and samosa are" if lang == "en" else ("Popcorn aur samosa" if lang == "hi" else "ポップコーンとサモサ")
+        else:
+            joined = ", ".join(items)
+            item_desc = "%s is" % joined.capitalize() if len(items) == 1 else "%s are" % joined.capitalize()
+            if lang == "hi":
+                item_desc = joined.capitalize()
+            elif lang == "ja":
+                item_desc = "、".join(items)
+        text = _say("propose", lang, item_desc)
         cards = [{"type": "order_proposal", "title": "Confirm your order", "detail": prop}]
         return _finish(user_text, text, cards, tools_used)
 

@@ -7,7 +7,8 @@ echo "Starting MCP server on :8001 ..."
 (cd mcp-server && nohup python3 server.py > ../mcp.log 2>&1 & echo $! > ../mcp.pid)
 sleep 2
 echo "Starting API+UI on :8000 ..."
-python3 -m uvicorn api.main:app --port 8000 --reload &
+# no --reload: _PENDING_PROPOSAL is in-memory; a reload mid-demo kills staged orders
+python3 -m uvicorn api.main:app --port 8000 &
 API_PID=$!
 echo $API_PID > api.pid
 echo ""

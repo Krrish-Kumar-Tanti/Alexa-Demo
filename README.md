@@ -92,7 +92,7 @@ Waiting on AWS: the AI brain (account approval pending) — everything is built 
 
 **Why does the voice work but not the brain?** Different gates: Polly voice needed only keys (done, live). Bedrock models need account approval (pending). Code handles both states.
 
-**What do the agents do?** OpenCode: backend + commits. Antigravity: everything inside `app/` (looks, cards, voice button). Kiro: video timing + Devpost copy. You: decisions, video, submit. Details in `agents_talking.md`.
+**What do the agents do?** OpenCode: backend + commits. Antigravity: everything inside `app/` (looks, cards, voice button). Kiro: video timing + Devpost copy. You: decisions, video, submit. Details in `docs/agents_talking.md`.
 
 ## Reference (compact, mostly for submission day)
 
@@ -105,6 +105,10 @@ Waiting on AWS: the AI brain (account approval pending) — everything is built 
 | `POST /mcp` | MCP 2025-11-25: `initialize`, `tools/list`, `tools/call` |
 
 Verify (contract test — run after any backend change):
+```bash
+python3 test_contract.py
+```
+Or the inline check:
 ```bash
 pip3 install "httpx==0.27.0"   # pinned: newer httpx breaks the test client on Python 3.9
 python3 -c "
