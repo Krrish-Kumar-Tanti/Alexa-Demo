@@ -59,7 +59,7 @@ Full contract test: see README "Test" block. It must print `ALL TESTS PASSED`. R
 - [x] `remind_grandma` tool + memory persistence + Bedrock diagram (`docs/aws.md`)
 - [x] Voice (Polly `POST /api/speak` + UI playback) + live-brain ready (Nova/Anthropic auto-format, memory context, open-question answers)
 - [x] Confirm gate (`propose_order`/`confirm_order`) + audit ledger (`data/audit.jsonl`, `GET /api/audit`)
-- [ ] Commerce loop: catalog + cart/history/tracking tools + PIN approval (contracts posted in `docs/agents_talking.md` commerce section)
+- [ ] Commerce loop: catalog + cart/history/tracking tools + PIN approval (contracts posted in `agents_talking.md` commerce section)
 - [ ] Video recording (script in `SUBMISSION.md` §3 — Krrish only, nobody else can record)
 - [ ] Devpost submission (paste Kiro's copy with 7-tool/Nova corrections, collaborators LAST, submit before Oct 23 12pm PDT)
 
