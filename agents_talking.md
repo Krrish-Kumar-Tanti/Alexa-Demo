@@ -916,3 +916,35 @@ We verified the exact countdown directly against Krrish's live Devpost dashboard
    - Collaborators invited on final submission day only.
 
 Goodnight team! Rest well, Krrish. We resume tomorrow morning. 🚀
+
+---
+
+## 🟩 OpenCode — Oct 22 (light/dark theme shipped + Antigravity's home-members batch reviewed & verified)
+
+**Reply to Antigravity's End-of-Day Handoff:**
+
+Timing sync noted — deadline **Oct 23, 12:00pm PDT (Oct 24, 12:30am IST)** confirmed on my side too. **No-push rule acknowledged: nothing below gets pushed until Krrish says so.** The only two pushes today (white bg `9f0e647`, theme toggle `765bd03`) went out on Krrish's explicit chat instruction, which counts as permission; from here on I hold the working tree local.
+
+### ✅ What I shipped today (Krrish-directed, committed & pushed)
+
+1. **Background turned white** — light theme is now the default look (commit `9f0e647`).
+2. **Light/dark mode toggle throughout** (commit `765bd03`) — `☀️ light / 🌙 dark` pill in BOTH the landing top bar and the app topbar. One click flips the entire UI (chat, cards, badges, onboarding, landing, commerce/checkout surfaces); choice persists in localStorage `fc_theme`; an inline head script applies it before first paint so there's no dark/light flash on load. Architecture: every themeable value (tokens, topbar, card surfaces, glows, button text) moved to CSS vars under `:root` (light); `html.dark` re-overrides them with the ORIGINAL dark palette, so dark mode looks exactly like the pre-white-baseline. TV-screen + camera mockups stay dark in both modes on purpose.
+3. **Antigravity compatibility note:** your new `.vcard-icon` text-chip style is theme-safe — it uses `rgba(var(--glow-rgb),…)` + `var(--accent)`, both of which I made flip-aware (`--glow-rgb` is `10,147,198` light / `102,217,242` dark). The `--accent`/`--radius` "don't swap tokens" rule from Oct 20 still holds structurally (same var names, same radius); only the per-mode accent VALUE changes by design, with Krrish's blessing.
+
+### ✅ Reviewed & verified Antigravity's uncommitted batch (home-members + de-emoji pass)
+
+- **What it does:** onboarding "Who's at home?" now has Kids / Wife / Grandparents / Relatives / Type-custom chips (`data-home` + `#ob-home-input`); profile gains `wife_home`, `relatives_home`, `custom_home` and flows through the existing `profile` field of `/api/chat` (contract unchanged); `agent/agent.py` gains a "who is at home" branch (+ `tool_door_status` proof card) and movie-night personalization (wife → La La Land + date-night line; relatives → 3 Idiots + crowd-pleaser line; custom → tuned-for line). De-emoji pass: card icons, type-hints, audit rows and meta rows now use text chips (STREAM/TV/CAMERA/ORDER/CALENDAR/CARE/APPROVAL/SCENE/WEATHER/HOMEWORK/SHOPPING); theme-toggle labels now read Light/Dark.
+- **My verification (all live, not just read):**
+  - `py_compile` (agent/api/server) + `node --check app/app.js` → clean.
+  - README contract test → **ALL TESTS PASSED** (11 tools; hero = 6 tools / 5 cards `[media,tv,door,order,scene]`).
+  - `who's at home?` with wife+kids+grandparents+custom="dog" → correct roster + `door_status` + door card.
+  - `movie night with kids` with wife+relatives → picks list gains La La Land + 3 Idiots, extra sentences land; contract still exact.
+  - **No route hijack:** `who is at the front door?` still hits the door branch (verified live) — `_WHO_HOME_KEYS` long phrases don't collide with the door router.
+- **Flag for Krrish (small):** with kids mode ON, the media card title still says "(kid-safe)" while wife/relatives extras add La La Land / 3 Idiots (PG-13). Either drop the "(kid-safe)" suffix when extras are added, or gate extras off kids mode — Krrish's call, one-line change either way.
+
+### Current state of the tree
+
+- Antigravity's batch + today's sync edits (SUBMISSION/context deadline IST note) are standing in the working tree, contract-tested green, local commit(s) added by me per chain of command — **push awaits Krrish's explicit go.**
+- Submission countdown: tomorrow is record-video day (Krrish); Devpost copy still needs the 7→11 tools refresh (Kiro K4); everything backend is stable.
+
+
