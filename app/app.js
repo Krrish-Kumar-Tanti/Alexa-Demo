@@ -7,7 +7,7 @@ const emptyEl = document.getElementById("empty");
 const onboardEl = document.getElementById("onboard");
 
 let history = [];
-let PROFILE = { name: "Family", lang: "en", land: "" };
+let PROFILE = { name: "Family", lang: "en", land: "", kids_home: true, wife_home: false, grandparents_home: false, relatives_home: false, custom_home: "" };
 try {
   const saved = JSON.parse(localStorage.getItem("fc_profile") || "{}");
   if (saved.name) PROFILE.name = String(saved.name);
@@ -16,7 +16,10 @@ try {
   if (saved.agegroup) PROFILE.agegroup = String(saved.agegroup);
   if (saved.gender) PROFILE.gender = String(saved.gender);
   if (typeof saved.kids_home === "boolean") PROFILE.kids_home = saved.kids_home;
+  if (typeof saved.wife_home === "boolean") PROFILE.wife_home = saved.wife_home;
   if (typeof saved.grandparents_home === "boolean") PROFILE.grandparents_home = saved.grandparents_home;
+  if (typeof saved.relatives_home === "boolean") PROFILE.relatives_home = saved.relatives_home;
+  if (saved.custom_home) PROFILE.custom_home = String(saved.custom_home);
 } catch(e) {}
 
 const VOICES = {
@@ -43,7 +46,7 @@ const I18N = {
     obCustomPh: "Type a name…",
     obAgeQ: "A little about you — optional, skip anytime",
     obHomeQ: "Who's at home?",
-    obHomeNote: "Kids keep speech kid-safe. Grandparents get gentle check-ins.",
+    obHomeNote: "Tailors movie recommendations, snacks, and home controls.",
     obNext: "Next →",
     obSkipTxt: "skip — keep it simple",
     obBackTxt: "← back",
@@ -54,21 +57,21 @@ const I18N = {
     kids: "Kids mode — kid-safe picks only",
     error: "Server's off — run ./run.sh and try again.",
     mediaSub: "Kid-safe for tonight",
-    tvKidsOn: "🛡️ Kids mode — only U/A",
+    tvKidsOn: "Kids mode — only U/A",
     tvKidsOff: "Kids mode off",
     doorSub: "Front Door • Entryway",
-    doorCam: "📹 Front door",
+    doorCam: "Front door",
     doorHint: "Last event from the front door",
-    etaLabel: "⏱️ Arriving by",
+    etaLabel: "Arriving by",
     delivChip: "Grocery delivery",
     calBadge: "Free @ 7:30 PM",
     calFree: "Free after 7:30 PM — that's your movie-night window.",
     remindSub: "Family check-ins",
-    remindTag: "💌 Sent:",
-    remindCall: "📞 Video call:",
+    remindTag: "Sent:",
+    remindCall: "Video call:",
     propNote: "Nothing is ordered until you say confirm.",
-    btnConfirm: "✓ Confirm order",
-    btnCancel: "✕ Cancel",
+    btnConfirm: "Confirm order",
+    btnCancel: "Cancel",
     sceneSub: "Movie-night scene",
     sceneLights: "Lights — dimmed to 20%",
     sceneDnd: "Front door — do-not-disturb",
@@ -86,27 +89,27 @@ const I18N = {
     listBadge: "Added",
     listOn: "On the list now",
     micTitle: "Voice input (Chrome)",
-    ttsOn: "Alexa voice: on",
-    ttsOff: "Alexa voice: muted",
+    ttsOn: "Voice: on",
+    ttsOff: "Voice: muted",
     editTitle: "Edit profile",
     chips: [
-      ["movie night with kids", "🎬 movie night with kids"],
-      ["who is at the front door?", "🔔 front door?"],
-      ["what's on my calendar today?", "📅 calendar"],
-      ["order popcorn and samosa", "🍿 order snacks"],
-      ["check in on grandma", "👵 check on grandma"],
-      ["dim the lights", "💡 scene"],
-      ["how's the weather?", "🌦️ weather"],
-      ["is homework done?", "📚 homework"],
-      ["add milk to the shopping list", "🛒 list"],
+      ["movie night with kids", "movie night with kids"],
+      ["who is at the front door?", "front door?"],
+      ["what's on my calendar today?", "calendar"],
+      ["order popcorn and samosa", "order snacks"],
+      ["check in on grandma", "check on grandma"],
+      ["dim the lights", "dim lights"],
+      ["how's the weather?", "weather"],
+      ["is homework done?", "homework"],
+      ["add milk to the shopping list", "shopping list"],
     ],
     heroChips: [
-      ["who is at the front door?", "🔔 front door?"],
-      ["what's on my calendar today?", "📅 calendar"],
-      ["order popcorn and samosa", "🍿 order snacks"],
-      ["check in on grandma", "👵 check on grandma"],
-      ["dim the lights", "💡 scene"],
-      ["how's the weather?", "🌦️ weather"],
+      ["who is at the front door?", "front door?"],
+      ["what's on my calendar today?", "calendar"],
+      ["order popcorn and samosa", "order snacks"],
+      ["check in on grandma", "check on grandma"],
+      ["dim the lights", "dim lights"],
+      ["how's the weather?", "weather"],
     ],
   },
   hi: {
@@ -118,7 +121,7 @@ const I18N = {
     obCustomPh: "Naam likhiye…",
     obAgeQ: "Thoda apne baare mein — optional, kabhi skip",
     obHomeQ: "Ghar par kaun-kaun hai?",
-    obHomeNote: "Bachchon ki awaaz kid-safe. Dadi-Nani ko halki check-ins.",
+    obHomeNote: "Movie recommendations, snacks aur controls family ke hisaab se set hote hain.",
     obNext: "Aage →",
     obSkipTxt: "skip — seedha rakho",
     obBackTxt: "← peeche",
@@ -129,21 +132,21 @@ const I18N = {
     kids: "Bachon ka mode — sirf kid-safe picks",
     error: "Server band hai — ./run.sh chalaiye, fir try kijiye.",
     mediaSub: "Bachon ke liye safe",
-    tvKidsOn: "🛡️ Bachon ka mode — sirf U/A",
+    tvKidsOn: "Bachon ka mode — sirf U/A",
     tvKidsOff: "Bachon ka mode band",
     doorSub: "Front door • bahar",
-    doorCam: "📹 Darwaza",
+    doorCam: "Darwaza",
     doorHint: "Darwaze ka last event",
-    etaLabel: "⏱️ Ghar pahunchega",
+    etaLabel: "Ghar pahunchega",
     delivChip: "Grocery delivery",
     calBadge: "7:30 PM ke baad free",
     calFree: "7:30 ke baad aap free hain — wahi movie night ka window.",
     remindSub: "Family check-ins",
-    remindTag: "💌 Bheja:",
-    remindCall: "📞 Video call:",
+    remindTag: "Bheja:",
+    remindCall: "Video call:",
     propNote: "Aap confirm karne tak kuch order nahi hoga.",
-    btnConfirm: "✓ Order confirm",
-    btnCancel: "✕ Cancel",
+    btnConfirm: "Order confirm",
+    btnCancel: "Cancel",
     sceneSub: "Movie-night scene",
     sceneLights: "Lights — 20% par dim",
     sceneDnd: "Darwaza — do-not-disturb",
@@ -161,27 +164,27 @@ const I18N = {
     listBadge: "Add ho gaya",
     listOn: "Abhi list par",
     micTitle: "Awaaz se poochhiye (Chrome)",
-    ttsOn: "Alexa awaaz: on",
-    ttsOff: "Alexa awaaz: band",
+    ttsOn: "Voice: on",
+    ttsOff: "Voice: band",
     editTitle: "Profile badlein",
     chips: [
-      ["movie night aaj karna hai", "🎬 movie night aaj"],
-      ["darwaza pe kaun hai?", "🔔 darwaza?"],
-      ["aaj ka plan?", "📅 plan"],
-      ["samosa order karo", "🍿 samosa"],
-      ["dadi se baat karao", "👵 dadi"],
-      ["lights dim karo", "💡 scene"],
-      ["mausam kaisa hai?", "🌦️ mausam"],
-      ["homework ka status?", "📚 homework"],
-      ["list mein doodh add karo", "🛒 list"],
+      ["movie night aaj karna hai", "movie night aaj"],
+      ["darwaza pe kaun hai?", "darwaza?"],
+      ["aaj ka plan?", "plan"],
+      ["samosa order karo", "samosa"],
+      ["dadi se baat karao", "dadi"],
+      ["lights dim karo", "scene"],
+      ["mausam kaisa hai?", "mausam"],
+      ["homework ka status?", "homework"],
+      ["list mein doodh add karo", "list"],
     ],
     heroChips: [
-      ["darwaza pe kaun hai?", "🔔 darwaza?"],
-      ["aaj ka plan?", "📅 plan"],
-      ["samosa order karo", "🍿 samosa"],
-      ["dadi se baat karao", "👵 dadi"],
-      ["lights dim karo", "💡 scene"],
-      ["mausam kaisa hai?", "🌦️ mausam"],
+      ["darwaza pe kaun hai?", "darwaza?"],
+      ["aaj ka plan?", "plan"],
+      ["samosa order karo", "samosa"],
+      ["dadi se baat karao", "dadi"],
+      ["lights dim karo", "scene"],
+      ["mausam kaisa hai?", "mausam"],
     ],
   },
   ja: {
@@ -193,7 +196,7 @@ const I18N = {
     obCustomPh: "なまえを入れてね…",
     obAgeQ: "ちょっとだけ教えてね — やめてもOK",
     obHomeQ: "おうちには誰がいる？",
-    obHomeNote: "子どもにはkid-safeな言葉。おばあちゃんにはやさしいcheck-in。",
+    obHomeNote: "映画のセレクトやおやつ、家電コントロールをご家族に合わせます。",
     obNext: "つぎへ →",
     obSkipTxt: "スキップ — シンプルに",
     obBackTxt: "← もどる",
@@ -203,21 +206,21 @@ const I18N = {
     placeholder: "なにでも聞いてね — 例：「映画の夜の準備」",
     kids: "Kids mode — 子ども向きだけ",
     mediaSub: "今夜はkid-safe pick",
-    tvKidsOn: "🛡️ kids mode — U/Aだけ",
+    tvKidsOn: "kids mode — U/Aだけ",
     tvKidsOff: "kids modeオフ",
     doorSub: "玄関 • 入り口",
-    doorCam: "📹 玄関",
+    doorCam: "玄関",
     doorHint: "玄関のさいきんのイベント",
-    etaLabel: "⏱️ 到着は",
+    etaLabel: "到着は",
     delivChip: "お買い物デリバリー",
     calBadge: "19:30以降フリー",
     calFree: "19:30以降は空いています — これがmovie nightの時間。",
     remindSub: "家族の見守り",
-    remindTag: "💌 送信ずみ:",
-    remindCall: "📞 Video call:",
+    remindTag: "送信ずみ:",
+    remindCall: "Video call:",
     propNote: "confirmするまで注文はしません。",
-    btnConfirm: "✓ 注文を確定",
-    btnCancel: "✕ キャンセル",
+    btnConfirm: "注文を確定",
+    btnCancel: "キャンセル",
     sceneSub: "movie-night シーン",
     sceneLights: "照明 — 20%におとした",
     sceneDnd: "玄関 — 取り込み中",
@@ -236,27 +239,27 @@ const I18N = {
     listOn: "いまのリスト",
     error: "サーバーが動いていません — ./run.sh を実行してからもう一度。",
     micTitle: "声で聞く（Chrome）",
-    ttsOn: "Alexaの声: オン",
-    ttsOff: "Alexaの声: ミュート",
+    ttsOn: "Voice: オン",
+    ttsOff: "Voice: ミュート",
     editTitle: "profile を編集",
     chips: [
-      ["映画の夜の準備", "🎬 映画の夜"],
-      ["玄関はどう？", "🔔 玄関"],
-      ["今日の予定は？", "📅 予定"],
-      ["ポップコーン注文", "🍿 おやつ"],
-      ["おばあちゃんに連絡", "👵 おばあちゃん"],
-      ["ライトを落として", "💡 シーン"],
-      ["天気はどう？", "🌦️ 天気"],
-      ["宿題は？", "📚 宿題"],
-      ["リストにぎゅうにゅうを追加", "🛒 リスト"],
+      ["映画の夜の準備", "映画の夜"],
+      ["玄関はどう？", "玄関"],
+      ["今日の予定は？", "予定"],
+      ["ポップコーン注文", "おやつ"],
+      ["おばあちゃんに連絡", "おばあちゃん"],
+      ["ライトを落として", "シーン"],
+      ["天気はどう？", "天気"],
+      ["宿題は？", "宿題"],
+      ["リストにぎゅうにゅうを追加", "リスト"],
     ],
     heroChips: [
-      ["玄関はどう？", "🔔 玄関"],
-      ["今日の予定は？", "📅 予定"],
-      ["ポップコーン注文", "🍿 おやつ"],
-      ["おばあちゃんに連絡", "👵 おばあちゃん"],
-      ["ライトを落として", "💡 シーン"],
-      ["天気はどう？", "🌦️ 天気"],
+      ["玄関はどう？", "玄関"],
+      ["今日の予定は？", "予定"],
+      ["ポップコーン注文", "おやつ"],
+      ["おばあちゃんに連絡", "おばあちゃん"],
+      ["ライトを落として", "シーン"],
+      ["天気はどう？", "天気"],
     ],
   },
 };
@@ -1105,6 +1108,18 @@ document.getElementById("send").onclick=()=>send();
 box.addEventListener("keydown",e=>{if(e.key==="Enter")send();});
 box.addEventListener("input",updateTypeHint);
 updateTypeHint();
+
+// Light/dark theme (persists across visits)
+let darkSaved = false;
+try{ darkSaved = localStorage.getItem("fc_theme") === "dark"; }catch(e){}
+document.documentElement.classList.toggle("dark", darkSaved);
+document.querySelectorAll(".theme-toggle").forEach(btn=>{
+  btn.onclick = ()=>{
+    const dark = !document.documentElement.classList.contains("dark");
+    document.documentElement.classList.toggle("dark", dark);
+    try{ localStorage.setItem("fc_theme", dark ? "dark" : "light"); }catch(e){}
+  };
+});
 
 // Initial load: first visit → landing; returning → straight into the app.
 // Landing is the only entry point to the stepper; the app never force-opens it.

@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Alexa+ Family Captain - Simulated Experience</title>
+<script>try{if(localStorage.getItem("fc_theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}</script>
 <link rel="stylesheet" href="/app/styles.css" />
 </head>
 <body>
@@ -13,6 +14,7 @@
   <div class="land-top-bar">
     <div class="logo" id="land-logo" role="button" tabindex="0" title="Open Family Captain App"> <span class="ring"></span> alexa+ <em>family captain</em></div>
     <div class="badges">
+      <button class="pill linklike theme-toggle" title="Toggle light / dark mode" aria-label="Toggle dark mode"><span class="t-sun">☀️ light</span><span class="t-moon">🌙 dark</span></button>
       <button class="pill linklike" id="land-nav-app" title="Open Family Captain App">Open App →</button>
     </div>
   </div>
@@ -36,13 +38,14 @@
 <header class="topbar">
   <div class="logo" id="nav-brand" role="button" tabindex="0" title="Go to landing page"> <span class="ring"></span> alexa+ <em>family captain</em></div>
   <div class="badges">
-    <button class="pill linklike" id="nav-landing" title="View landing page">🏠 landing</button>
-    <span class="pill" id="memory-pill">💾 <span id="memory-count">0 chats</span></span>
+    <button class="pill linklike" id="nav-landing" title="View landing page">Landing</button>
+    <span class="pill" id="memory-pill">Memory: <span id="memory-count">0 chats</span></span>
     <span class="pill">SIMULATED ALEXA+ EXPERIENCE</span>
     <span class="pill dim">MCP 2025-11-25 • Streamable HTTP</span>
-    <span class="pill user-badge" id="user-profile-badge" title="Active user profile"><span class="user-avatar">👤</span> <strong id="user-display-name">Krrish</strong> <span id="user-display-details" class="user-sub"></span></span>
-    <button class="pill linklike" id="edit-profile" title="Edit profile">✏️ profile</button>
-    <button class="pill linklike logout-btn" id="logout-btn" title="Log out and return to landing page">🚪 log out</button>
+    <span class="pill user-badge" id="user-profile-badge" title="Active user profile"><strong id="user-display-name">Krrish</strong> <span id="user-display-details" class="user-sub"></span></span>
+    <button class="pill linklike" id="edit-profile" title="Edit profile">Profile</button>
+    <button class="pill linklike theme-toggle" title="Toggle light / dark mode" aria-label="Toggle dark mode"><span class="t-sun">☀️ light</span><span class="t-moon">🌙 dark</span></button>
+    <button class="pill linklike logout-btn" id="logout-btn" title="Log out and return to landing page">Log out</button>
   </div>
 </header>
 
@@ -67,7 +70,7 @@
               <button data-name="Dad">Dad</button>
               <button data-name="Mom">Mom</button>
               <button data-name="Grandma">Grandma</button>
-              <button data-name="__custom" id="ob-custom-btn">✎ type</button>
+              <button data-name="__custom" id="ob-custom-btn">Type</button>
             </div>
             <input id="ob-name-input" class="ob-custom" placeholder="Type a name…" autocomplete="off" hidden />
             <button class="hero-cta" id="ob-n1">Next →</button>
@@ -92,10 +95,14 @@
           <div class="ob-step" data-step="3" hidden>
             <div class="onboard-q" id="ob-home-q">Who's at home?</div>
             <div class="onboard-chips" id="ob-homes">
-              <button data-home="kids" class="sel">🧒 Kids</button>
-              <button data-home="grandma">👵 Grandparents</button>
+              <button data-home="kids" class="sel">Kids</button>
+              <button data-home="wife">Wife</button>
+              <button data-home="grandma">Grandparents</button>
+              <button data-home="relatives">Relatives</button>
+              <button data-home="__custom" id="ob-home-custom-btn">Type</button>
             </div>
-            <p class="ob-note" id="ob-home-note">Kids keep speech kid-safe. Grandparents get gentle check-ins.</p>
+            <input id="ob-home-input" class="ob-custom" placeholder="Type who is home (e.g. friends, in-laws, pets)..." autocomplete="off" hidden />
+            <p class="ob-note" id="ob-home-note">Tailors movie picks, snacks, volume, and family controls.</p>
             <button class="hero-cta" id="ob-n3">Next →</button>
           </div>
           <div class="ob-step" data-step="4" hidden>
@@ -115,7 +122,7 @@
           <span class="ring"></span>
           <h1 id="hero-title">What should the family do tonight?</h1>
           <p id="hero-sub">One ask — I line up the calendar, the living-room TV, the front door and snacks. Every tool call below runs on a real MCP server.</p>
-          <button class="hero-cta" id="hero-cta" data-q="movie night with kids">🎬 movie night with kids</button>
+          <button class="hero-cta" id="hero-cta" data-q="movie night with kids">movie night with kids</button>
           <div class="hero-chips" id="hero-chips"></div>
         </div>
       </div>
@@ -123,8 +130,12 @@
       <div class="chips" id="chips" hidden></div>
 
       <div class="composer">
-        <button id="mic" title="Voice input (Chrome)">🎤</button>
-        <button id="tts-toggle" title="Alexa voice: on" class="active">🔊</button>
+        <button id="mic" title="Voice input (Chrome)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+        </button>
+        <button id="tts-toggle" title="Voice: on" class="active">
+          <svg id="tts-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        </button>
         <div class="lang" role="group" aria-label="Language">
           <button data-lang="en" class="active">EN</button>
           <button data-lang="hi">हिं</button>
