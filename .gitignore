@@ -9,3 +9,5 @@ venv/
 agent/memory.json
 data/
 .env
+.agents/
+skills-lock.json

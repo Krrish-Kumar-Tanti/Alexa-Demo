@@ -164,6 +164,7 @@ _DISPLAY_LABELS = {
 }
 _CARD_TITLES = {
     "Tonight's picks (kid-safe)": {"hi": "Aaj ki picks (kid-safe)", "ja": "今夜のセレクション（kid-safe）"},
+    "Tonight's picks": {"hi": "Aaj ki movie picks", "ja": "今夜のセレクション"},
     "Front door": {"hi": "Darwaza", "ja": "玄関"},
     "Front Door": {"hi": "Darwaza", "ja": "玄関"},
     "Today": {"hi": "Aaj", "ja": "今日"},
@@ -650,8 +651,9 @@ def run_agent(user_text: str, history: List[Dict[str, str]] = None, profile: Dic
         ai = try_bedrock_reply(user_text, (memory_context() + "\n" + text).strip(), lang)
         if ai:
             text = ai
+        media_title_key = "Tonight's picks" if (profile.get("wife_home") or profile.get("relatives_home")) else "Tonight's picks (kid-safe)"
         cards = [
-            {"type": "media", "title": _card_title("Tonight's picks (kid-safe)", lang), "items": media_items},
+            {"type": "media", "title": _card_title(media_title_key, lang), "items": media_items},
             {"type": "tv", "title": "Living-Room TV", "detail": tv.get("tv", {})},
             {"type": "door", "title": _card_title("Front door", lang), "detail": dict(door, last_event=_disp(door.get("last_event", ""), lang))},
             {"type": "order", "title": "Order %s" % order.get("order_id", ""), "detail": order},

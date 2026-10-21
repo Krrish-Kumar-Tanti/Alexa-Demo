@@ -1083,8 +1083,15 @@ document.getElementById("ob-skip2").onclick = ()=>{
   obShow(3);
 };
 
-// Suggestion chips + hero CTAs (event delegation survives rebuilds)
+// Suggestion chips + hero CTAs + theme toggle (event delegation survives rebuilds)
 document.addEventListener("click", (e)=>{
+  const themeBtn = e.target.closest(".theme-toggle");
+  if(themeBtn){
+    const dark = !document.documentElement.classList.contains("dark");
+    document.documentElement.classList.toggle("dark", dark);
+    try{ localStorage.setItem("fc_theme", dark ? "dark" : "light"); }catch(err){}
+    return;
+  }
   const q = e.target.closest("[data-q]");
   if(q){ send(q.dataset.q); return; }
   const langBtn = e.target.closest(".lang button");
@@ -1189,13 +1196,6 @@ updateTypeHint();
 let darkSaved = false;
 try{ darkSaved = localStorage.getItem("fc_theme") === "dark"; }catch(e){}
 document.documentElement.classList.toggle("dark", darkSaved);
-document.querySelectorAll(".theme-toggle").forEach(btn=>{
-  btn.onclick = ()=>{
-    const dark = !document.documentElement.classList.contains("dark");
-    document.documentElement.classList.toggle("dark", dark);
-    try{ localStorage.setItem("fc_theme", dark ? "dark" : "light"); }catch(e){}
-  };
-});
 
 // Initial load: first visit → landing; returning → straight into the app.
 // Landing is the only entry point to the stepper; the app never force-opens it.

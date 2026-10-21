@@ -48,12 +48,21 @@ Next up: a store catalog with search, a cart, order history and delivery trackin
 
 Money rule, enforced in code: `propose` never spends. Only `confirm` (your explicit yes) executes.
 
-## Run it yourself (5 minutes, your turn)
+## Run it yourself (1 command)
+
+Works on Windows, macOS, and Linux:
 
 ```bash
-pip3 install -r requirements.txt
-python3 mcp-server/server.py        # terminal 1 — the hands (:8001)
-python3 -m uvicorn api.main:app --port 8000   # terminal 2 — face + receptionist (:8000)
+# 1-command runner (installs dependencies + boots MCP :8001 & Web UI :8000 + opens browser):
+python run.py
+```
+
+Or run manually in two terminals:
+
+```bash
+pip install -r requirements.txt
+python mcp-server/server.py        # terminal 1 — the hands (:8001)
+python -m uvicorn api.main:app --port 8000   # terminal 2 — face + receptionist (:8000)
 ```
 
 Open http://127.0.0.1:8000 and try these in order — say each out loud if you like, then watch the tool badges:
